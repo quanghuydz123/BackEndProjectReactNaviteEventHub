@@ -2,10 +2,11 @@ const UserModel = require("../models/userModel")
 const bcrypt = require('bcrypt')
 const asyncHandle = require('express-async-handler')
 const jwt = require('jsonwebtoken')
-const getJsonWebToken = async (email,id) => {
+const getJsonWebToken = async (email,id,isAdmin) => {
     const payload = {
         email,
-        id
+        id,
+        isAdmin
     }
     const token = jwt.sign(payload,process.env.SECRET_KEY,{expiresIn:'7d'})
     return token
@@ -27,7 +28,8 @@ const register = asyncHandle( async (req, res) => {
     const newUser = new UserModel({
         email,
         fullname:username ?? '',
-        password:hashedPassword
+        password:hashedPassword,
+        isAdmin:false
     })
 
     await newUser.save()
@@ -39,7 +41,7 @@ const register = asyncHandle( async (req, res) => {
             email:newUser.email,
             id:newUser.id,
             fullname:newUser.fullname,
-            accesstoken: await getJsonWebToken(email,newUser.id)
+            accesstoken: await getJsonWebToken(email,newUser.id,newUser.isAdmin)
         }
     })
 })
@@ -63,7 +65,7 @@ const login = asyncHandle(async (req,res)=>{
         data:{
             id:existingUser.id,
             email:existingUser.email,
-            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id)
+            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin)
         }
     })
 })
