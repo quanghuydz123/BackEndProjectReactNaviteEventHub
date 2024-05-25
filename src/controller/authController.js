@@ -2,6 +2,11 @@ const UserModel = require("../models/userModel")
 const bcrypt = require('bcrypt')
 const asyncHandle = require('express-async-handler')
 const jwt = require('jsonwebtoken')
+const nodemailer = require("nodemailer");
+const EmailService = require('../service/EmailService')
+require('dotenv').config()
+
+//asyncHandle có xử lý đến fontend
 const getJsonWebToken = async (email,id,isAdmin) => {
     const payload = {
         email,
@@ -69,7 +74,27 @@ const login = asyncHandle(async (req,res)=>{
         }
     })
 })
+
+  
+
+const verification = asyncHandle(async(req,res)=>{
+    const {email} = req.body
+    const verificationCode = Math.round(1000 + Math.random() * 9000)
+    try {
+        await EmailService.handleSendMail(verificationCode,email)
+        res.status(200).json({
+            message:'Gửi verficationCode thành công',
+            data:{
+                code: verificationCode  
+            }
+        })
+    } catch (error) {
+        res.status(401)
+        throw new Error('Không thể gửi verificationCode đến email')
+    }
+})
 module.exports = {
     register,
-    login
+    login,
+    verification
 }
