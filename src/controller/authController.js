@@ -20,19 +20,15 @@ const getJsonWebToken = async (email,id,isAdmin) => {
 const register = asyncHandle( async (req, res) => {
     const {email,password,comfirmPassword,username} = req.body
     const existingUser = await UserModel.findOne({email})
-    if(password !== comfirmPassword){
-        res.status(401)//ngăn không cho xuống dưới
-        throw new Error('Mật khẩu nhập lại không giống nhau!!!')
-    }
     if(existingUser){
-        res.status(401)//ngăn không cho xuống dưới
+        res.status(402)//ngăn không cho xuống dưới
         throw new Error('Email đã được đăng ký!!!')
     }
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
     const newUser = new UserModel({
         email,
-        fullname:username ?? '',
+        fullname:username || 'Người dùng',
         password:hashedPassword,
         isAdmin:false
     })
@@ -93,8 +89,15 @@ const verification = asyncHandle(async(req,res)=>{
         throw new Error('Không thể gửi verificationCode đến email')
     }
 })
+
+const forgotPassword = asyncHandle(async(req,res)=>{
+    const {email} = req.body
+    const verificationCode = Math.round(1000 + Math.random() * 9000)
+   
+})
 module.exports = {
     register,
     login,
-    verification
+    verification,
+    forgotPassword
 }
