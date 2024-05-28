@@ -75,6 +75,34 @@ const login = asyncHandle(async (req,res)=>{
 
 const verification = asyncHandle(async(req,res)=>{
     const {email} = req.body
+    const existingUser = await UserModel.findOne({email})
+    if(existingUser){
+        res.status(402)//ngăn không cho xuống dưới
+        throw new Error('Email đã được đăng ký!!!')
+    }
+    const verificationCode = Math.round(1000 + Math.random() * 9000)
+    try {
+        await EmailService.handleSendMail(verificationCode,email)
+        res.status(200).json({
+            message:'Gửi verficationCode thành công',
+            data:{
+                code: verificationCode  
+            }
+        })
+    } catch (error) {
+        res.status(401)
+        throw new Error('Không thể gửi verificationCode đến email')
+    }
+})
+
+
+const verificationForgotPassword = asyncHandle(async(req,res)=>{
+    const {email} = req.body
+    const existingUser = await UserModel.findOne({email})
+    if(!existingUser){
+        res.status(402)//ngăn không cho xuống dưới
+        throw new Error('Email chưa được đăng ký!!!')
+    }
     const verificationCode = Math.round(1000 + Math.random() * 9000)
     try {
         await EmailService.handleSendMail(verificationCode,email)
@@ -91,13 +119,30 @@ const verification = asyncHandle(async(req,res)=>{
 })
 
 const forgotPassword = asyncHandle(async(req,res)=>{
-    const {email} = req.body
-    const verificationCode = Math.round(1000 + Math.random() * 9000)
-   
+    const {email,password,comfirmPassword} = req.body
+    const existingUser = await UserModel.findOne({email})
+    if(!existingUser){
+        res.status(400)//ngăn không cho xuống dưới
+        throw new Error('Email chưa được đăng ký!!!')
+    }
+    if(password !== comfirmPassword){
+        res.status(401)//ngăn không cho xuống dưới
+        throw new Error('Mật khẩu nhập lại không chính xác!!!')
+    }
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
+    const updateUser = await UserModel.findByIdAndUpdate(existingUser.id,{password:hashedPassword},{new:true})
+    res.status(200).json({
+        message:'Đổi mật khẩu thành công',
+        data:{
+            code: updateUser  
+        }
+    })
 })
 module.exports = {
     register,
     login,
     verification,
-    forgotPassword
+    forgotPassword,
+    verificationForgotPassword
 }

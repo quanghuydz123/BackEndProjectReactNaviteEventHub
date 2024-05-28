@@ -4,7 +4,6 @@ const errorMiddleHandle = (err,_req,res,next) => {
     res.status(statusCode).json({
         message: err.message,
         statusCode,
-        stack: err.stack
     })
 }
 
