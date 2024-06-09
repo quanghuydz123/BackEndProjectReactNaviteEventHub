@@ -1,4 +1,4 @@
-const UserModel = require("../models/userModel")
+const UserModel = require("../models/UserModel")
 const bcrypt = require('bcrypt')
 const asyncHandle = require('express-async-handler')
 const jwt = require('jsonwebtoken')
@@ -66,6 +66,9 @@ const login = asyncHandle(async (req,res)=>{
         data:{
             id:existingUser.id,
             email:existingUser.email,
+            fullname:existingUser?.fullname,
+            isAdmin:existingUser.isAdmin,
+            photoUrl:existingUser?.photoUrl,
             accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin)
         }
     })
