@@ -1,7 +1,7 @@
 const asyncHandle = require('express-async-handler')
 require('dotenv').config()
 const EventModel = require("../models/EventModel")
-
+const calsDistanceLocation = require("../utils/calsDistanceLocation")
 
 
 const addEvent = asyncHandle(async (req, res) => {
@@ -31,6 +31,9 @@ const addEvent = asyncHandle(async (req, res) => {
                     users: createEvent
                 }
             })
+        }else{
+            res.status(400)
+            throw new Error('Thêm thất bại')
         }
     } else {
         res.status(401)
@@ -39,7 +42,9 @@ const addEvent = asyncHandle(async (req, res) => {
 })
 
 const getAllEvent = asyncHandle(async (req, res) => {
-    const events = await EventModel.find().populate('category users authorId')
+    const {limit,limitDate} = req.query
+    console.log(limitDate)
+    const events = await EventModel.find({date:{$gte:limitDate}}).populate('category users authorId').sort({"date":1})
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -48,7 +53,49 @@ const getAllEvent = asyncHandle(async (req, res) => {
         }
     })
 })
+const getEvents = asyncHandle(async (req, res) => {
+    const {lat,long,distance,limit,limitDate} = req.query
+    const events = await EventModel.find().populate('category users authorId').limit(limit ?? 0).sort({"date":1})
+    if(lat && long && distance){
+        const eventsNearYou = []
+        if(events.length > 0 ){
+            events.forEach((event)=>{
+                const eventDistance = calsDistanceLocation(lat,long,event.position.lat,event.position.lng)
+                if(eventDistance < distance){
+                    eventsNearYou.push(event)
+                }
+            })
+        }
+        res.status(200).json({
+            status:200,
+            message:'Thành công',
+            data:{
+                events:eventsNearYou
+            }
+        })
+    }else{
+        res.status(200).json({
+            status:200,
+            message:'Thành công',
+            data:{
+                events:events
+            }
+        })
+    }
+})
+
+const updateFollowerEvent = asyncHandle(async (req, res) => {
+    const {idUser,idEvent} = req.body
+    const event = await EventModel.findById({_id:idEvent})
+    console.log(event)
+    res.status(200).json({
+        message:'Cập nhập followers thành công',
+        
+    })
+})
 module.exports = {
     addEvent,
-    getAllEvent
+    getAllEvent,
+    getEvents,
+    updateFollowerEvent
 }

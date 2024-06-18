@@ -6,7 +6,7 @@ const EventSchema = new mongoose.Schema({
     Address:{type:String,required:true},
     photoUrl:{type:String},
     addressDetals:{type:Object},
-    Location:{type:String},
+    Location:{type:String,required:true},
     position:{type:Object,required:true},
     price:{type:Number,required:true},
     category:{
@@ -25,8 +25,8 @@ const EventSchema = new mongoose.Schema({
         required: true,
     }],
     startAt:{type:Date,required:true},
-    endAt:{type:Date},
-    date:{type:Date},
+    endAt:{type:Date,required:true},
+    date:{type:Date,required:true},
     status:{type:Boolean,require:true,default:true}
 },
 {
