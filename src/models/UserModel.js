@@ -1,3 +1,4 @@
+const { Double } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
@@ -6,6 +7,10 @@ const UserSchema = new mongoose.Schema({
     password:{type:String,require:true},
     isAdmin:{type:Boolean,require:true},
     photoUrl:{type:String},
+    position:{
+        lat:{type:Number},
+        lng:{type:Number}
+    },
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

@@ -5,5 +5,6 @@ const VerifyMiddleware = require('../middlewares/VerifyMiddleware');
 
 
 userRouter.get('/get-all',VerifyMiddleware,userController.getAll)
+userRouter.put('/update-position-user',userController.updatePositionUser)
 
 module.exports = userRouter
