@@ -6,21 +6,41 @@ const FollowerModel = require("../models/FollowerModel")
 
 const updateFollowerEvent = asyncHandle(async (req, res) => {
     const {idUser,idEvent} = req.body
-    const followerEvent = await FollowerModel.findOne({user:idUser,event:idEvent})
+
+    const followerEvent = await FollowerModel.findOne({user:idUser})
     if(followerEvent){
-        const updateFollowerEvent = await FollowerModel.findByIdAndUpdate(followerEvent.id,{status:!followerEvent.status},{new:true})
-        res.status(200).json({
-            status:200,
-            message:'cập nhập followerEvent thành công',
-            data:{
-                event:updateFollowerEvent
-            }
-            
-        })
+        let events = [...followerEvent.events]
+        const index = events.findIndex(item => item.toString() === idEvent.toString())
+        if(index != -1){
+            events.splice(index,1)
+            const updateFollowerEvent = await FollowerModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
+            res.status(200).json({
+                status:200,
+                message:'cập nhập followerEvent thành công',
+                data:{
+                    event:updateFollowerEvent
+                }
+                
+            })
+        }else{
+            events.push(idEvent)
+            const updateFollowerEvent = await FollowerModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
+            res.status(200).json({
+                status:200,
+                message:'cập nhập followerEvent thành công',
+                data:{
+                    event:updateFollowerEvent
+                }
+                
+            })
+        }
+        
     }else{
+        const events = []
+        events.push(idEvent)
         const createFollowerEvent = await FollowerModel.create({
             user:idUser,
-            event:idEvent
+            events:events
         })
         res.status(200).json({
             status:200,
@@ -40,7 +60,7 @@ const getAllFollower = asyncHandle(async (req, res) => {
       path: 'user',
     })
     .populate({
-      path: 'event',
+      path: 'events',
       populate: [
         { path: 'category' },
         { path: 'authorId' },
