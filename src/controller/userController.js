@@ -31,7 +31,22 @@ const updatePositionUser = asyncHandle( async (req, res) => {
         }
     })
 })
+
+const updateFcmtoken  = asyncHandle( async (req, res) => {
+    const {uid,fcmtokens} = req.body
+    console.log(req.body)
+    const updateUser = await UserModel.findByIdAndUpdate(uid,{fcmTokens:fcmtokens},{new:true})
+    res.status(200).json({
+        status:200,
+        message:'Thành công',
+        data:{
+            user:updateUser
+        }
+    })
+})
+
 module.exports = {
     getAll,
-    updatePositionUser
+    updatePositionUser,
+    updateFcmtoken
 }

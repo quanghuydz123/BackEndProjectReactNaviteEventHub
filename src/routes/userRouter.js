@@ -6,5 +6,6 @@ const VerifyMiddleware = require('../middlewares/VerifyMiddleware');
 
 userRouter.get('/get-all',VerifyMiddleware,userController.getAll)
 userRouter.put('/update-position-user',userController.updatePositionUser)
+userRouter.post('/update-fcmtoken',userController.updateFcmtoken)
 
 module.exports = userRouter

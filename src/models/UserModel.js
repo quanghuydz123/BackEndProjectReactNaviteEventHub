@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
         lat:{type:Number},
         lng:{type:Number}
     },
+    fcmTokens:[{type:String}],
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 
