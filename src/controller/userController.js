@@ -34,7 +34,6 @@ const updatePositionUser = asyncHandle( async (req, res) => {
 
 const updateFcmtoken  = asyncHandle( async (req, res) => {
     const {uid,fcmtokens} = req.body
-    console.log(req.body)
     const updateUser = await UserModel.findByIdAndUpdate(uid,{fcmTokens:fcmtokens},{new:true})
     res.status(200).json({
         status:200,
@@ -45,8 +44,60 @@ const updateFcmtoken  = asyncHandle( async (req, res) => {
     })
 })
 
+const getUserById  = asyncHandle( async (req, res) => {
+    const {uid} = req.query
+    if(uid){
+        const userDetails = await UserModel.findById(uid)
+        res.status(200).json({
+            status:200,
+            message:'Thành công',
+            data:{
+                user:userDetails
+            }
+        })
+    }else{
+        res.status(401)
+        throw new Error('Người dùng không tồn tại')
+    }
+    
+})
+const updateProfile  = asyncHandle( async (req, res) => {
+    const {fullname,phoneNumber,bio,_id,photoUrl} = req.body
+    if(!photoUrl){
+        const updateUser = await UserModel.findByIdAndUpdate(_id,{fullname,phoneNumber,bio},{new:true})
+        if(updateUser){
+            res.status(200).json({
+                statusCode:200,
+                message:'Cập nhập thành công',
+                data:{
+                    user:updateUser
+                }
+            })
+        }else{
+            res.status(401)
+            throw new Error('Cập nhập thông tin không thành công')
+        }
+    }else{
+        const updateUser = await UserModel.findByIdAndUpdate(_id,{photoUrl},{new:true})
+        if(updateUser){
+            res.status(200).json({
+                statusCode:200,
+                message:'Cập nhập thành công',
+                data:{
+                    user:updateUser
+                }
+            })
+        }else{
+            res.status(401)
+            throw new Error('Cập nhập thông tin không thành công')
+        }
+    }
+    
+})
 module.exports = {
     getAll,
     updatePositionUser,
-    updateFcmtoken
+    updateFcmtoken,
+    getUserById,
+    updateProfile
 }

@@ -6,9 +6,12 @@ const connectDb = require('./src/configs/connectDb')
 const errorMiddleHandle = require('./src/middlewares/errorMiddlewares')
 const socketIo = require('socket.io');
 require('dotenv').config()
-const server = require('http').createServer(app)
-const io = socketIo(server);
-const port = 3001
+const http = require("http").Server(app);
+const socketIO = require('socket.io')(http, {
+    cors: {
+        origin: "<http://localhost:3000>"
+    }
+});const port = 3001
 
 
 
@@ -18,18 +21,23 @@ app.use(cors())
 app.use(express.json())
 
 // Lắng nghe kết nối từ client
-io.on('connection', (socket) => {
+socketIO.on('connection', (socket) => {
     console.log('New client connected');
     
     // Xử lý các sự kiện từ client
     socket.on('events', (data) => {
         console.log('events', data);
-        io.emit('events','truyền lại nè')
+        socketIO.emit('events','truyền lại nè')
     });
 
     socket.on('followers', (data) => {
         console.log('followers:', data);
-        io.emit('followers','truyền lại nè')
+        socketIO.emit('followers','truyền lại nè')
+    });
+
+    socket.on('updateUser', (data) => {
+        console.log('updateUser:', data);
+        socketIO.emit('updateUser','truyền lại nè')
     });
 
 
@@ -44,6 +52,6 @@ connectDb.connectDb()
 
 app.use(errorMiddleHandle)
 
-server.listen(port,()=>{
+http.listen(port,()=>{
     console.log("Sever is running in port: " + port )
 })

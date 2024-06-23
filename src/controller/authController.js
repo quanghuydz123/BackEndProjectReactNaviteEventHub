@@ -70,7 +70,9 @@ const login = asyncHandle(async (req,res)=>{
             isAdmin:existingUser.isAdmin,
             photoUrl:existingUser?.photoUrl,
             accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin),    
-            fcmTokens:existingUser.fcmTokens ?? []
+            fcmTokens:existingUser.fcmTokens ?? [],
+            phoneNumber:existingUser.phoneNumber,
+            bio:existingUser.bio
         }
     })
 })

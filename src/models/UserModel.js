@@ -7,6 +7,10 @@ const UserSchema = new mongoose.Schema({
     password:{type:String,require:true},
     isAdmin:{type:Boolean,require:true},
     photoUrl:{type:String},
+    phoneNumber:{type:String},
+    bio:{
+        type:String
+    },
     position:{
         lat:{type:Number},
         lng:{type:Number}
