@@ -9,7 +9,10 @@ const FollowerSchema = new mongoose.Schema({
     events:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'events',
-        required: true,
+    }],
+    categories:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Categories',
     }]
 
 })

@@ -57,7 +57,7 @@ const updateFollowerEvent = asyncHandle(async (req, res) => {
 const getAllFollower = asyncHandle(async (req, res) => {
     const allFollower = await FollowerModel.find()
     .populate({
-      path: 'user',
+      path: 'user categories',
     })
     .populate({
       path: 'events',
@@ -76,7 +76,58 @@ const getAllFollower = asyncHandle(async (req, res) => {
     })
     
 })
+
+const updateFollowerCategory = asyncHandle(async (req, res) => {
+    const {idUser,idsCategory} = req.body
+    const followerCategory = await FollowerModel.findOne({user:idUser})
+    if(followerCategory){
+        const updateFollowerCategory = await FollowerModel.findByIdAndUpdate(followerCategory.id,{categories:idsCategory},{new:true})
+        res.status(200).json({
+            status:200,
+            message:'cập nhập followerCategory thành công',
+            data:{
+                event:updateFollowerCategory
+            }
+            
+        })
+    }else{
+        res.status(400)
+        throw new Error('idUser không tồn tại để update follower')
+    }
+    
+    
+})
+
+const getFollowerById = asyncHandle(async (req, res) => {
+    const {uid} = req.query
+    const follower = await FollowerModel.find({user:uid})
+    .populate({
+      path: 'user categories',
+    })
+    .populate({
+      path: 'events',
+      populate: [
+        { path: 'category' },
+        { path: 'authorId' },
+        { path: 'users' } 
+      ]
+    });
+    if(follower){
+        res.status(200).json({
+            status:200,
+            message:'Lấy follower thành công',
+            data:{
+                followers:follower
+            }
+        })
+    }
+    
+    
+})
+
 module.exports = {
     updateFollowerEvent,
-    getAllFollower
+    getAllFollower,
+    updateFollowerCategory,
+    getFollowerById,
 }
