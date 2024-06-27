@@ -35,10 +35,17 @@ socketIO.on('connection', (socket) => {
         socketIO.emit('followers','truyền lại nè')
     });
 
+    socket.on('followUser', (data) => {
+        console.log('followUser:', data);
+        socketIO.emit('followUser','truyền lại nè')
+    });
+
     socket.on('updateUser', (data) => {
         console.log('updateUser:', data);
         socketIO.emit('updateUser','truyền lại nè')
     });
+
+
 
 
     socket.on('disconnect', () => {

@@ -13,6 +13,10 @@ const FollowerSchema = new mongoose.Schema({
     categories:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Categories',
+    }],
+    users:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users',
     }]
 
 })
