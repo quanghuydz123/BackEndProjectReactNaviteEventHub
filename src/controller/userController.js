@@ -1,5 +1,8 @@
 const UserModel = require("../models/UserModel")
 const asyncHandle = require('express-async-handler')
+const notificationController = require('./notificationController')
+
+const http = require('http')
 require('dotenv').config()
 
 
@@ -43,6 +46,7 @@ const updateFcmtoken  = asyncHandle( async (req, res) => {
         }
     })
 })
+
 
 const getUserById  = asyncHandle( async (req, res) => {
     const {uid} = req.query
@@ -94,10 +98,13 @@ const updateProfile  = asyncHandle( async (req, res) => {
     }
     
 })
+
+
 module.exports = {
     getAll,
     updatePositionUser,
     updateFcmtoken,
     getUserById,
-    updateProfile
+    updateProfile,
+    
 }

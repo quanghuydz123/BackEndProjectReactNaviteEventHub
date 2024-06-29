@@ -3,7 +3,7 @@ const userRouter = require("./userRouter")
 const EventRouter = require("./EventRouter")
 const categoryRouter = require("./categoryRouter")
 const followerRouter = require("./followerRouter")
-
+const notificationRouter = require("./notificationRouter")
 
 const routes = (app) =>{
     app.use('/auth',authRouter)
@@ -11,6 +11,7 @@ const routes = (app) =>{
     app.use('/event',EventRouter)
     app.use('/category',categoryRouter)
     app.use('/follower',followerRouter)
+    app.use('/notification',notificationRouter)
 
 }
 

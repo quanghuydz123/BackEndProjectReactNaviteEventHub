@@ -8,5 +8,6 @@ EventRouter.get('/get-all',eventController.getAllEvent)
 EventRouter.get('/get-events',eventController.getEvents)
 EventRouter.post('/update-followers',eventController.updateFollowerEvent)
 
+EventRouter.get('/get-event-byId',eventController.getEventById)
 
 module.exports = EventRouter

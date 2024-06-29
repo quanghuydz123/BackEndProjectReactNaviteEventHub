@@ -43,7 +43,6 @@ const addEvent = asyncHandle(async (req, res) => {
 
 const getAllEvent = asyncHandle(async (req, res) => {
     const {limit,limitDate} = req.query
-    console.log(limitDate)
     const events = await EventModel.find({date:{$gte:limitDate}}).populate('category users authorId').sort({"date":1})
     res.status(200).json({
         status:200,
@@ -93,9 +92,21 @@ const updateFollowerEvent = asyncHandle(async (req, res) => {
         
     })
 })
+const getEventById = asyncHandle(async (req, res) => {
+    const {eid} = req.query
+    const event = await EventModel.findById(eid).populate('category users authorId')
+    res.status(200).json({
+        status:200,
+        message:'Thành công',
+        data:{
+            event:event
+        }
+    })
+})
 module.exports = {
     addEvent,
     getAllEvent,
     getEvents,
-    updateFollowerEvent
+    updateFollowerEvent,
+    getEventById
 }

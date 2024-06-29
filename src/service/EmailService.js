@@ -26,8 +26,26 @@ const handleSendMail = async (val, email) => {
     }
 }
 
+const handleSendEmailUpdate = async (data)=>{
+    try {
+        const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true, // Use `true` for port 465, `false` for all other ports
+            auth: {
+                user: process.env.USERNAME_EMAIL,
+                pass: process.env.PASSWORD,
+            },
+        });
 
+        await transporter.sendMail(data);
+        return "OK"
+    } catch (error) {
+        return error
+    }
+}
 
 module.exports = {
-    handleSendMail
+    handleSendMail,
+    handleSendEmailUpdate
 }
