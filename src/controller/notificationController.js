@@ -63,7 +63,7 @@ const handleSendNotificationInviteUserToEvent  = asyncHandle( async (req, res) =
                     subtitle:'',
                     body:'Xin chào',
                     data:{
-                        id:"123"
+                        id:eventId
                     }
                 })
             )

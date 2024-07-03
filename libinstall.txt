@@ -2,3 +2,4 @@ npm install -D  nodemon
 npm install express mongodb dotenv cors
 npm install bcrypt express-async-handler jsonwebtoken mongoose
 npm install nodemailer
+npm i --save lodash

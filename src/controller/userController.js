@@ -42,7 +42,7 @@ const updateFcmtoken  = asyncHandle( async (req, res) => {
         status:200,
         message:'Thành công',
         data:{
-            user:updateUser
+            fcmTokens:updateUser.fcmTokens ?? [],
         }
     })
 })
@@ -50,6 +50,8 @@ const updateFcmtoken  = asyncHandle( async (req, res) => {
 
 const getUserById  = asyncHandle( async (req, res) => {
     const {uid} = req.query
+    // const Token = await notificationController.getAccessToken()
+    // console.log("res",Token)
     if(uid){
         const userDetails = await UserModel.findById(uid)
         res.status(200).json({

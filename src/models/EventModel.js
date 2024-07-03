@@ -14,6 +14,11 @@ const EventSchema = new mongoose.Schema({
         ref: 'Categories',
         required: true,
     },
+    categories:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Categories',
+        required: true,
+    }],
     authorId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
