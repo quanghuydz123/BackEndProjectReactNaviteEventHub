@@ -8,12 +8,12 @@ const EventSchema = new mongoose.Schema({
     addressDetals:{type:Object},
     Location:{type:String,required:true},
     position:{type:Object,required:true},
-    price:{type:Number,required:true},
-    category:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Categories',
-        required: true,
-    },
+    price:{type:Number},
+    // category:{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Categories',
+    //     required: true,
+    // },
     categories:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Categories',
@@ -31,7 +31,6 @@ const EventSchema = new mongoose.Schema({
     }],
     startAt:{type:Date,required:true},
     endAt:{type:Date,required:true},
-    date:{type:Date,required:true},
     status:{type:Boolean,require:true,default:true}
 },
 {
