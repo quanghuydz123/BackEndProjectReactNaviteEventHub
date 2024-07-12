@@ -1,9 +1,12 @@
 const asyncHandle = require('express-async-handler')
 const {JWT} = require('google-auth-library');
 const UserModel = require("../models/UserModel")
-const EmailService = require('../service/EmailService')
+const EmailService = require('../service/EmailService');
+const EventModel = require('../models/EventModel');
+const NotificationModel = require('../models/NotificationModel');
 
 const handleSendNotification  = async ({fcmToken,title,subtitle,body,data})=>{
+    console.log("ok")
     var request = require('request');
     var options = {
       'method': 'POST',
@@ -51,17 +54,18 @@ const getAccessToken = () =>{
   }
   
 const handleSendNotificationInviteUserToEvent  = asyncHandle( async (req, res) => {
-    const {uids,eventId} = req.body
-    uids.forEach(async (id)=>{
+    const {SenderID,RecipientIds,eventId} = req.body
+    const event = await EventModel.findById(eventId)
+    RecipientIds.forEach(async (id)=>{
         const user = await UserModel.findById(id)
         const fcmTokens = user.fcmTokens
         if(fcmTokens.length > 0){
             fcmTokens.forEach(async (fcmToken)=>
                 await handleSendNotification({
                     fcmToken:fcmToken,
-                    title:'Gửi thông báo nè',
+                    title:'Thông báo',
                     subtitle:'',
-                    body:'Xin chào',
+                    body:`Bạn được mời tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
                     data:{
                         id:eventId
                     }
@@ -76,6 +80,13 @@ const handleSendNotificationInviteUserToEvent  = asyncHandle( async (req, res) =
                 html: `<b>abc</b>` // html body
             }
         }
+        const createNotification = await NotificationModel.create({
+          senderID:SenderID,
+          recipientId:id,
+          eventId,
+          type:'inviteEvent',
+          content:`đã mời bạn tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
+      })
     })
     res.status(200).json({
         status:200,
@@ -86,8 +97,63 @@ const handleSendNotificationInviteUserToEvent  = asyncHandle( async (req, res) =
     })
 })
 
+const getAll = asyncHandle( async (req, res) => {
+  const notifications = await NotificationModel.find().populate({
+    path: 'senderID recipientId',
+  })
+  .populate({
+    path: 'eventId',
+    populate: [
+      { path: 'categories' },
+      { path: 'authorId' },
+      { path: 'users' } 
+    ]
+  });
+  res.status(200).json({
+      status:200,
+      message:'Thành công',
+      data:{
+        notifications
+      }
+  })
+})
+const getnotificationsById = asyncHandle( async (req, res) => {
+  const {uid} = req.query
+  const notifications = await NotificationModel.find({recipientId:uid}).populate({
+    path: 'senderID recipientId',
+  })
+  .populate({
+    path: 'eventId',
+    populate: [
+      { path: 'categories' },
+      { path: 'authorId' },
+      { path: 'users' } 
+    ]
+  });
+  res.status(200).json({
+      status:200,
+      message:'Thành công',
+      data:{
+        notifications
+      }
+  })
+})
+const updateIsViewedNotifications = asyncHandle( async (req, res) => {
+  const {uid} = req.body
+  const updateIsViewedNotifications = await NotificationModel.updateMany({recipientId:uid},{$set: { isViewed: true }})
+  res.status(200).json({
+      status:200,
+      message:'Thành công',
+      data:{
+        
+      }
+  })
+})
 module.exports = {
     handleSendNotificationInviteUserToEvent,
     handleSendNotification,
-    getAccessToken
+    getAccessToken,
+    getAll,
+    getnotificationsById,
+    updateIsViewedNotifications
 }

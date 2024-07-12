@@ -45,7 +45,10 @@ socketIO.on('connection', (socket) => {
         socketIO.emit('updateUser','truyền lại nè')
     });
 
-
+    socket.on('getNotifications', (data) => {
+        console.log('getNotifications', data);
+        socketIO.emit('getNotifications','truyền lại nè')
+    });
 
 
     socket.on('disconnect', () => {

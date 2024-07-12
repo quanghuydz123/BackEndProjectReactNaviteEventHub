@@ -1,7 +1,5 @@
 const UserModel = require("../models/UserModel")
 const asyncHandle = require('express-async-handler')
-const notificationController = require('./notificationController')
-
 const http = require('http')
 require('dotenv').config()
 

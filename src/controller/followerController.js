@@ -1,7 +1,10 @@
 const asyncHandle = require('express-async-handler')
 require('dotenv').config()
 const FollowerModel = require("../models/FollowerModel")
+const UserModel = require("../models/UserModel")
+const NotificationModel = require("../models/NotificationModel")
 
+const notificationController = require('./notificationController');
 
 
 const updateFollowEvent = asyncHandle(async (req, res) => {
@@ -62,7 +65,7 @@ const getAllFollow = asyncHandle(async (req, res) => {
     .populate({
       path: 'events',
       populate: [
-        { path: 'category' },
+        { path: 'categories' },
         { path: 'authorId' },
         { path: 'users' } 
       ]
@@ -107,7 +110,7 @@ const getFollowById = asyncHandle(async (req, res) => {
     .populate({
       path: 'events',
       populate: [
-        { path: 'category' },
+        { path: 'categories' },
         { path: 'authorId' },
         { path: 'users' } 
       ]
@@ -128,12 +131,10 @@ const getFollowById = asyncHandle(async (req, res) => {
 })
 const updateFollowUserOther = asyncHandle(async (req, res) => {
     const {idUser,idUserOther} = req.body
-
     const followerUser = await FollowerModel.findOne({user:idUser})
     if(followerUser){
         let users = [...followerUser.users]
         const index = users.findIndex(item => item.toString() === idUserOther.toString())
-        console.log("index",index)
         if(index != -1){
             users.splice(index,1)
             const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
@@ -148,6 +149,29 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
         }else{
             users.push(idUserOther)
             const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
+            const user = await UserModel.findById(idUser)
+            const userOther = await UserModel.findById(idUserOther)
+            const fcmTokens = userOther.fcmTokens
+            if(fcmTokens.length > 0){
+                fcmTokens.forEach(async (fcmToken)=>
+                    await notificationController.handleSendNotification({
+                        fcmToken:fcmToken,
+                        title:'Thông báo',
+                        subtitle:'',
+                        body:`Bạn vừa được ${user.fullname} theo dõi`,
+                        data:{
+                            
+                        }
+                    })
+                )
+                const createNotification = await NotificationModel.create({
+                    senderID:idUser,
+                    recipientId:idUserOther,
+                    type:'follow',
+                    content:`vừa theo dõi bạn !!!`,
+                    isRead:true
+                })
+            }
             res.status(200).json({
                 status:200,
                 message:'cập nhập followerEvent thành công',

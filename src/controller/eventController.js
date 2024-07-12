@@ -53,9 +53,27 @@ const getAllEvent = asyncHandle(async (req, res) => {
     })
 })
 const getEvents = asyncHandle(async (req, res) => {
-    const {lat,long,distance,limit,limitDate,searchValue} = req.query
+    const {lat,long,distance,limit,limitDate,searchValue,isUpcoming,isPastEvents,categoriesFilter,
+        startAt,endAt,minPrice,maxPrice} = req.query
+    // console.log("minPrice,maxPrice",minPrice,maxPrice)
+    const filter = {}
     const regex = new RegExp(searchValue ?? '', 'i')//để cho không phân biệt hoa thường
-    const events = await EventModel.find({title:{'$regex': regex}}).populate('categories users authorId').limit(limit ?? 0).sort({"startAt":1})
+    filter.title = {'$regex': regex}
+    if(categoriesFilter){
+        filter.categories = {$in:[categoriesFilter]}
+    }
+    if(startAt && endAt){
+        filter.startAt = {$gte:new Date(startAt).getTime()}
+        filter.endAt = {$lt:new Date(endAt).getTime()}
+    }
+    if (minPrice && maxPrice) {
+        filter.price = { $gte: minPrice, $lte: maxPrice };
+    } else if (minPrice) {
+        filter.price = { $gte: minPrice };
+    } else if (maxPrice) {
+        filter.price = { $lte: maxPrice };
+    }
+    const events = await EventModel.find(filter).populate('categories users authorId').limit(limit ?? 0).sort({"startAt":1})
     if(lat && long && distance){
         const eventsNearYou = []
         if(events.length > 0 ){
