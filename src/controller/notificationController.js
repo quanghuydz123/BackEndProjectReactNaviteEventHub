@@ -53,49 +53,53 @@ const getAccessToken = () =>{
     });
   }
   
-const handleSendNotificationInviteUserToEvent  = asyncHandle( async (req, res) => {
-    const {SenderID,RecipientIds,eventId} = req.body
-    const event = await EventModel.findById(eventId)
-    RecipientIds.forEach(async (id)=>{
-        const user = await UserModel.findById(id)
-        const fcmTokens = user.fcmTokens
-        if(fcmTokens.length > 0){
-            fcmTokens.forEach(async (fcmToken)=>
-                await handleSendNotification({
-                    fcmToken:fcmToken,
-                    title:'Thông báo',
-                    subtitle:'',
-                    body:`Bạn được mời tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
-                    data:{
-                        id:eventId
-                    }
-                })
-            )
-        }else{
-            const data = {
-                from: `Support Evenhub Application <${process.env.USERNAME_EMAIL}>`, // sender address
-                to: user.email, // list of receivers
-                subject: "Thông báo", // Subject line
-                text: "Bạn được mời tham gia sự kiện này hãy vô xem ngay", // plain text body
-                html: `<b>abc</b>` // html body
-            }
-        }
-        const createNotification = await NotificationModel.create({
-          senderID:SenderID,
-          recipientId:id,
-          eventId,
-          type:'inviteEvent',
-          content:`đã mời bạn tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
-      })
-    })
-    res.status(200).json({
-        status:200,
-        message:'succes',
-        data:{
+  const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => {
+    const { SenderID, RecipientIds, eventId } = req.body;
+    const event = await EventModel.findById(eventId);
 
+    // Sử dụng Promise.all để chờ cho tất cả các async operation hoàn thành (phải có nếu không nó sẽ chạy xuống res)
+    await Promise.all(RecipientIds.map(async (id) => {
+        const user = await UserModel.findById(id);
+        const fcmTokens = user.fcmTokens;
+
+        if (fcmTokens.length > 0) {
+            await Promise.all(fcmTokens.map(async (fcmToken) => {
+                await handleSendNotification({
+                    fcmToken: fcmToken,
+                    title: 'Thông báo',
+                    subtitle: '',
+                    body: `Bạn được mời tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
+                    data: {
+                        id: eventId
+                    }
+                });
+            }));
+        } else {
+            const data = {
+                from: `Support Evenhub Application <${process.env.USERNAME_EMAIL}>`,
+                to: user.email,
+                subject: "Thông báo",
+                text: "Bạn được mời tham gia sự kiện này hãy vô xem ngay",
+                html: `<b>abc</b>`
+            };
+            
         }
-    })
-})
+
+        await NotificationModel.create({
+            senderID: SenderID,
+            recipientId: id,
+            eventId,
+            type: 'inviteEvent',
+            content: `đã mời bạn tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
+        });
+    }));
+
+    res.status(200).json({
+        status: 200,
+        message: 'success',
+        data: {}
+    });
+});
 
 const getAll = asyncHandle( async (req, res) => {
   const notifications = await NotificationModel.find().populate({
@@ -130,6 +134,7 @@ const getnotificationsById = asyncHandle( async (req, res) => {
       { path: 'users' } 
     ]
   });
+  console.log(notifications.length)
   res.status(200).json({
       status:200,
       message:'Thành công',
@@ -149,11 +154,23 @@ const updateIsViewedNotifications = asyncHandle( async (req, res) => {
       }
   })
 })
+const deleteNotifications = asyncHandle( async (req, res) => {
+  const {uid} = req.body
+  const deleteA = await NotificationModel.deleteMany({})
+  res.status(200).json({
+      status:200,
+      message:'Thành công',
+      data:{
+        
+      }
+  })
+})
 module.exports = {
     handleSendNotificationInviteUserToEvent,
     handleSendNotification,
     getAccessToken,
     getAll,
     getnotificationsById,
-    updateIsViewedNotifications
+    updateIsViewedNotifications,
+    deleteNotifications
 }
