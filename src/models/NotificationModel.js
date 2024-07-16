@@ -17,7 +17,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
         type: String,
-        enum: ['inviteEvent', 'message', 'like','follow', 'other'],
+        enum: ['inviteEvent', 'message', 'like','follow','rejectFollow','allowFollow', 'other'],
         required: true
     },
     content:{
@@ -32,6 +32,10 @@ const notificationSchema = new mongoose.Schema(
         type:Boolean,
         required:true,
         default:false
+    },
+    status:{
+        type: String,
+        enum: ['answered', 'unanswered', 'cancelled','rejected', 'other'],
     },
     isDeleted: {
         type: Boolean,

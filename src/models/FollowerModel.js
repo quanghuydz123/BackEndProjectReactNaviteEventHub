@@ -13,11 +13,24 @@ const FollowerSchema = new mongoose.Schema({
     categories:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Categories',
-    }],
+    }
+],
     users:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'users',
-    }]
+        idUser:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
+        },
+        status:{
+            type:Boolean,
+            required:true,
+            default:false
+        },
+        idNotification:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'notifications',
+        }
+    }
+    ]
 
 })
 

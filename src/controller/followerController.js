@@ -3,7 +3,6 @@ require('dotenv').config()
 const FollowerModel = require("../models/FollowerModel")
 const UserModel = require("../models/UserModel")
 const NotificationModel = require("../models/NotificationModel")
-
 const notificationController = require('./notificationController');
 
 
@@ -60,7 +59,7 @@ const updateFollowEvent = asyncHandle(async (req, res) => {
 const getAllFollow = asyncHandle(async (req, res) => {
     const allFollower = await FollowerModel.find()
     .populate({
-      path: 'user categories users',
+      path: 'user categories users.idUser',
     })
     .populate({
       path: 'events',
@@ -105,7 +104,7 @@ const getFollowById = asyncHandle(async (req, res) => {
     const {uid} = req.query
     const follower = await FollowerModel.find({user:uid})
     .populate({
-      path: 'user categories users',
+      path: 'user categories users.idUser',
     })
     .populate({
       path: 'events',
@@ -115,7 +114,12 @@ const getFollowById = asyncHandle(async (req, res) => {
         { path: 'users' } 
       ]
     });
-    const numberOfFollowers = await FollowerModel.find({ users: { $in: [uid] } }).countDocuments();
+    const numberOfFollowers = await FollowerModel.find({ users: {
+        $elemMatch: {
+            idUser: uid,
+            status: true
+        }
+    }}).countDocuments();
     if(follower){
         res.status(200).json({
             status:200,
@@ -134,10 +138,12 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
     const followerUser = await FollowerModel.findOne({user:idUser})
     if(followerUser){
         let users = [...followerUser.users]
-        const index = users.findIndex(item => item.toString() === idUserOther.toString())
+        const index = users.findIndex(item => item.idUser.toString() === idUserOther.toString())
         if(index != -1){
+            const idNotification = users.find((item)=>item.idUser.toString() === idUserOther.toString()).idNotification
             users.splice(index,1)
             const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
+            await NotificationModel.findByIdAndUpdate(idNotification,{status:'cancelled'},{new:true})
             res.status(200).json({
                 status:200,
                 message:'cập nhập followUserOther thành công',
@@ -147,31 +153,33 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                 
             })
         }else{
-            users.push(idUserOther)
+            const createNotification = await NotificationModel.create({
+                senderID:idUser,
+                recipientId:idUserOther,
+                type:'follow',
+                content:`muốn theo dõi bạn !!!`,
+                status:'unanswered',
+                isRead:true 
+            })
+            users.push({idUser:idUserOther,idNotification:createNotification.id})
             const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
             const user = await UserModel.findById(idUser)
             const userOther = await UserModel.findById(idUserOther)
             const fcmTokens = userOther.fcmTokens
             if(fcmTokens.length > 0){
-                fcmTokens.forEach(async (fcmToken)=>
+                await Promise.all(fcmTokens.map(async (fcmToken)=>
                     await notificationController.handleSendNotification({
                         fcmToken:fcmToken,
                         title:'Thông báo',
                         subtitle:'',
-                        body:`Bạn vừa được ${user.fullname} theo dõi`,
+                        body:`${user.fullname} muốn theo dõi bạn theo dõi`,
                         data:{
                             
                         }
-                    })
+                    }))
                 )
-                const createNotification = await NotificationModel.create({
-                    senderID:idUser,
-                    recipientId:idUserOther,
-                    type:'follow',
-                    content:`vừa theo dõi bạn !!!`,
-                    isRead:true
-                })
             }
+            
             res.status(200).json({
                 status:200,
                 message:'cập nhập followerEvent thành công',
@@ -206,5 +214,6 @@ module.exports = {
     getAllFollow,
     updateFollowCategory,
     getFollowById,
-    updateFollowUserOther
+    updateFollowUserOther,
+    
 }

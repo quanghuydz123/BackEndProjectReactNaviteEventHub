@@ -31,12 +31,13 @@ socketIO.on('connection', (socket) => {
     });
 
     socket.on('followers', (data) => {
-        console.log('followers:', data);
-        socketIO.emit('followers','truyền lại nè')
+        const {id} = data
+        console.log('followers:', id);
+        socketIO.emit('followers',id)
     });
 
     socket.on('followUser', (data) => {
-        console.log('followUser:', data);
+        console.log('followUser:', 'truyền lại nè');
         socketIO.emit('followUser','truyền lại nè')
     });
 
