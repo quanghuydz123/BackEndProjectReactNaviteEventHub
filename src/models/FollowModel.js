@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 
-const FollowerSchema = new mongoose.Schema({
+const FollowSchema = new mongoose.Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
@@ -34,5 +34,5 @@ const FollowerSchema = new mongoose.Schema({
 
 })
 
-const FollowerModel = mongoose.model('followers', FollowerSchema)
-module.exports = FollowerModel
+const FollowModel = mongoose.model('followers', FollowSchema)
+module.exports = FollowModel

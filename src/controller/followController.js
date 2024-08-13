@@ -1,6 +1,6 @@
 const asyncHandle = require('express-async-handler')
 require('dotenv').config()
-const FollowerModel = require("../models/FollowerModel")
+const FollowModel = require("../models/FollowModel")
 const UserModel = require("../models/UserModel")
 const NotificationModel = require("../models/NotificationModel")
 const notificationController = require('./notificationController');
@@ -9,13 +9,13 @@ const notificationController = require('./notificationController');
 const updateFollowEvent = asyncHandle(async (req, res) => {
     const {idUser,idEvent} = req.body
 
-    const followerEvent = await FollowerModel.findOne({user:idUser})
+    const followerEvent = await FollowModel.findOne({user:idUser})
     if(followerEvent){
         let events = [...followerEvent.events]
         const index = events.findIndex(item => item.toString() === idEvent.toString())
         if(index != -1){
             events.splice(index,1)
-            const updateFollowEvent = await FollowerModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
+            const updateFollowEvent = await FollowModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
             res.status(200).json({
                 status:200,
                 message:'cập nhập followerEvent thành công',
@@ -26,7 +26,7 @@ const updateFollowEvent = asyncHandle(async (req, res) => {
             })
         }else{
             events.push(idEvent)
-            const updateFollowEvent = await FollowerModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
+            const updateFollowEvent = await FollowModel.findByIdAndUpdate(followerEvent.id,{events:events},{new:true})
             res.status(200).json({
                 status:200,
                 message:'cập nhập followerEvent thành công',
@@ -40,7 +40,7 @@ const updateFollowEvent = asyncHandle(async (req, res) => {
     }else{
         const events = []
         events.push(idEvent)
-        const createFollowerEvent = await FollowerModel.create({
+        const createFollowerEvent = await FollowModel.create({
             user:idUser,
             events:events
         })
@@ -57,7 +57,7 @@ const updateFollowEvent = asyncHandle(async (req, res) => {
 })
 
 const getAllFollow = asyncHandle(async (req, res) => {
-    const allFollower = await FollowerModel.find()
+    const allFollower = await FollowModel.find()
     .populate({
       path: 'user categories users.idUser',
     })
@@ -81,9 +81,9 @@ const getAllFollow = asyncHandle(async (req, res) => {
 
 const updateFollowCategory = asyncHandle(async (req, res) => {
     const {idUser,idsCategory} = req.body
-    const followerCategory = await FollowerModel.findOne({user:idUser})
+    const followerCategory = await FollowModel.findOne({user:idUser})
     if(followerCategory){
-        const updateFollowCategory = await FollowerModel.findByIdAndUpdate(followerCategory.id,{categories:idsCategory},{new:true})
+        const updateFollowCategory = await FollowModel.findByIdAndUpdate(followerCategory.id,{categories:idsCategory},{new:true})
         res.status(200).json({
             status:200,
             message:'cập nhập followerCategory thành công',
@@ -102,7 +102,7 @@ const updateFollowCategory = asyncHandle(async (req, res) => {
 
 const getFollowById = asyncHandle(async (req, res) => {
     const {uid} = req.query
-    const follower = await FollowerModel.find({user:uid})
+    const follower = await FollowModel.find({user:uid})
     .populate({
       path: 'user categories users.idUser',
     })
@@ -114,7 +114,7 @@ const getFollowById = asyncHandle(async (req, res) => {
         { path: 'users' } 
       ]
     });
-    const numberOfFollowers = await FollowerModel.find({ users: {
+    const numberOfFollowers = await FollowModel.find({ users: {
         $elemMatch: {
             idUser: uid,
             status: true
@@ -135,14 +135,14 @@ const getFollowById = asyncHandle(async (req, res) => {
 })
 const updateFollowUserOther = asyncHandle(async (req, res) => {
     const {idUser,idUserOther} = req.body
-    const followerUser = await FollowerModel.findOne({user:idUser})
+    const followerUser = await FollowModel.findOne({user:idUser})
     if(followerUser){
         let users = [...followerUser.users]
         const index = users.findIndex(item => item.idUser.toString() === idUserOther.toString())
         if(index != -1){
             const idNotification = users.find((item)=>item.idUser.toString() === idUserOther.toString()).idNotification
             users.splice(index,1)
-            const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
+            const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
             await NotificationModel.findByIdAndUpdate(idNotification,{status:'cancelled'},{new:true})
             res.status(200).json({
                 status:200,
@@ -162,7 +162,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                 isRead:true 
             })
             users.push({idUser:idUserOther,idNotification:createNotification.id})
-            const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
+            const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id,{users:users},{new:true})
             const user = await UserModel.findById(idUser)
             const userOther = await UserModel.findById(idUserOther)
             const fcmTokens = userOther.fcmTokens
@@ -193,7 +193,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
     }else{
         const users = []
         users.push(idUserOther)
-        const createfollowUserOther = await FollowerModel.create({
+        const createfollowUserOther = await FollowModel.create({
             user:idUser,
             users:users
         })

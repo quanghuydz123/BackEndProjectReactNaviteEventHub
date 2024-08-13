@@ -139,6 +139,7 @@ const forgotPassword = asyncHandle(async(req,res)=>{
     const hashedPassword = await bcrypt.hash(password, salt)
     const updateUser = await UserModel.findByIdAndUpdate(existingUser.id,{password:hashedPassword},{new:true})
     res.status(200).json({
+        status:200,
         message:'Đổi mật khẩu thành công',
         data:{
             code: updateUser  

@@ -4,7 +4,7 @@ const UserModel = require("../models/UserModel")
 const EmailService = require('../service/EmailService');
 const EventModel = require('../models/EventModel');
 const NotificationModel = require('../models/NotificationModel');
-const FollowerModel = require('../models/FollowerModel');
+const FollowModel = require('../models/FollowModel');
 
 const handleSendNotification = async ({ fcmToken, title, subtitle, body, data }) => {
   var request = require('request');
@@ -168,12 +168,12 @@ const updateStatusNotifications = asyncHandle(async (req, res) => {
   const { idUserFollow, idUserFollowed, type } = req.body
   if (type === 'answered') {
 
-    const followerUser = await FollowerModel.findOne({ user: idUserFollow })
+    const followerUser = await FollowModel.findOne({ user: idUserFollow })
     if (followerUser) {
       let users = [...followerUser.users]
       const userFollow = users.find((item) => item.idUser.toString() === idUserFollowed.toString())
       const idNotification = users.find((item) => item.idUser.toString() === idUserFollowed.toString()).idNotification
-      await FollowerModel.findByIdAndUpdate(followerUser.id, { //hay
+      await FollowModel.findByIdAndUpdate(followerUser.id, { //hay
         $set: {
           'users.$[x].status': true,
         }
@@ -202,14 +202,14 @@ const updateStatusNotifications = asyncHandle(async (req, res) => {
     }
   }
   else if (type === 'rejected') {
-    const followerUser = await FollowerModel.findOne({ user: idUserFollow })
+    const followerUser = await FollowModel.findOne({ user: idUserFollow })
     if (followerUser) {
       let users = [...followerUser.users]
       const index = users.findIndex(item => item.idUser.toString() === idUserFollowed.toString())
       if (index != -1) {
         const idNotification = users.find((item) => item.idUser.toString() === idUserFollowed.toString()).idNotification
         users.splice(index, 1)
-        const updateFollowUserOther = await FollowerModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
+        const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
         await NotificationModel.findByIdAndUpdate(idNotification, { status: 'rejected' }, { new: true })
         await NotificationModel.create({
           senderID: idUserFollowed,
