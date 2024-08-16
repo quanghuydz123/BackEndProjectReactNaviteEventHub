@@ -2,23 +2,23 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const MessengerSchema = new Schema({
-    idMessenger: {
-        type: String,
+    idConversation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Conversations',
         required: true,
-        unique: true,
     },
     content: {
         type: String,
         required: true,
     },
-    timestamp: {
-        type: Date,
-        required: true,
-        default: Date.now,
-    },
     senderId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users',
         required: true,
+    },
+    isReaded: {
+        type: Boolean,
+        default: false,
     },
     isDeleted: {
         type: Boolean,
