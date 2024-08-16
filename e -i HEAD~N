@@ -1,0 +1,173 @@
+[33mcommit ac02d3b784e82c70adcb72dd47b55c83e325d310[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: dtoan <dtoan1612@gmail.com>
+Date:   Fri Aug 16 19:18:33 2024 +0700
+
+    create api for conversation and messenger
+
+[33mcommit 6b8d32341c554dc5d23f409977390539691e9695[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Wed Aug 14 04:44:13 2024 +0700
+
+    remove env
+
+[33mcommit bb260b7a92174e9fc8cd65b43615449e5796d82e[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Tue Aug 13 20:37:27 2024 +0700
+
+    Change name
+
+[33mcommit 4b28c6b0b00126b06bc1db521ce196ab5ea84472[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Tue Jul 16 13:38:41 2024 +0700
+
+    edit user tracking function (add send notification, wait for approval)
+
+[33mcommit ba84023b73f89d5ed9fab441eaaef809da80f073[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sun Jul 14 05:11:11 2024 +0700
+
+    use Promise.all for asynchronous processing instead of forEach
+
+[33mcommit 4d5fc6fc431114a39b4cca139299f203dc9f56b8[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jul 13 05:46:58 2024 +0700
+
+    Handle receiving and displaying notifications from event invitations, follows
+
+[33mcommit 64b7bd98d9c1c6ec4dd4af89088dbeebf5c4b918[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jul 13 05:44:28 2024 +0700
+
+    fix
+
+[33mcommit 691f1055a1bba6a0d362d8989bf98977e24b81bc[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jul 6 05:18:50 2024 +0700
+
+    Xóa field date ra khỏi event model
+
+[33mcommit e6ac15536d7c7b7e64db4ea43456a2bc6d6818a7[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Thu Jul 4 01:57:31 2024 +0700
+
+    Viết api xử lý search event và api và chinh sửa model event từ category thành categories
+
+[33mcommit 89815480c692e04357a93416e6adb453ff932e01[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jun 29 22:46:14 2024 +0700
+
+    Tích hợp và tạo api sendnotification bằng fcmToken http v1 firebase thành công
+
+[33mcommit 5e3fa1754b3503fb8e9f43e02a86611bced88e38[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jun 29 22:35:57 2024 +0700
+
+    change gitignore
+
+[33mcommit fcd5d7b966b821ce7beeabea7fa4f7bc5692a22b[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jun 29 22:30:28 2024 +0700
+
+    Add adminsdk.json to .gitignore
+
+[33mcommit 6e4aba7c746271d0abeeabf5b2f740feafc19725[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Fri Jun 28 03:26:49 2024 +0700
+
+    Tạo api xử lý theo dõi người dùng khác trong follower
+
+[33mcommit 3abf5980b904af0557f92c351303596944e1bd1e[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Wed Jun 26 03:56:01 2024 +0700
+
+    Tạo api update follower category
+
+[33mcommit 3e2acee82d60ffda79a72db37d4f5b50bfdb3c4d[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Mon Jun 24 03:20:52 2024 +0700
+
+    Tạo api update profile user và api chỉnh sửa ảnh đại diện
+
+[33mcommit 615f6aff700e8f57b6e18d72780199065f151412[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat Jun 22 18:54:31 2024 +0700
+
+    Tạo api lưu fcmtoken người dùng vào database
+
+[33mcommit 327005f8cb765e386189417e329fcf10c4194c91[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Thu Jun 20 16:27:41 2024 +0700
+
+    Chỉnh sửa FollowerModel
+
+[33mcommit 4db2808df51ad962c1427b7f8ee120314401c46c[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Wed Jun 19 17:34:57 2024 +0700
+
+    Tích hợp socket vào dự án và tạo api lấy vị trí người dùng
+
+[33mcommit 76ac0f7bc28c675fb831c3b467dece4424b504f5[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Tue Jun 18 17:17:41 2024 +0700
+
+    tạo 1 số api cho event và follower, tạo Model cho follower
+
+[33mcommit 6a2bc8b397e6e7add9ee1189f793622fd275566f[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Thu Jun 13 23:11:27 2024 +0700
+
+    Tạo api get all event
+
+[33mcommit 30bb9c07d5f612881cacb62a9455863ea76758a4[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Thu Jun 13 19:55:50 2024 +0700
+
+    Tạo api thêm event và category
+
+[33mcommit ed3a6f375a85fba9835ba12af3d5a2d3f70fd55e[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Mon Jun 10 00:53:53 2024 +0700
+
+    Thêm api get all user
+
+[33mcommit 6cf9c9eae6689e71f4294f1f8d8c65da475b7844[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Tue May 28 15:52:52 2024 +0700
+
+    Tạo api quên mật khẩu và gửi mã xác nhận quên mật khẩu thành công
+
+[33mcommit 16bcbcb5eb8eadcbd88b5b9e9dcbc72e903e41fe[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Mon May 27 01:09:16 2024 +0700
+
+    Tạo api verification và đã chạy thành công
+
+[33mcommit c6ce81d6eaf23f4dd6f3c9d30d1c38238c46a34a[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Sat May 25 21:14:19 2024 +0700
+
+    Tạo api send verification email và tạo Email Service
+
+[33mcommit 6e58cd5ba0fa46e5f3efdd82ad224362d0323850[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Fri May 17 14:02:57 2024 +0700
+
+    Thêm trường IsAdmin cho UserModel
+
+[33mcommit 6fa529807861807e293f51692d636c1a7909db7c[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Fri May 17 13:52:07 2024 +0700
+
+    Tạo api đăng nhập
+
+[33mcommit 5bf44b14d3ecc9858e433257afae5c70ef61742e[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Thu May 16 16:41:07 2024 +0700
+
+    Tạo api đăng ký tài khoản và tạo token
+
+[33mcommit a417482bd5ae2252e32013ef3839be5f8a3d59f2[m
+Author: Huy <dinhphongtamquoc453@gmail.com>
+Date:   Wed May 15 16:58:30 2024 +0700
+
+    first commit
