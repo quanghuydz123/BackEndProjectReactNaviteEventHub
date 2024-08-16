@@ -77,7 +77,51 @@ const login = asyncHandle(async (req,res)=>{
     })
 })
 
-  
+const loginWithGoogle = asyncHandle(async (req,res)=>{
+   const userInfo = req.body
+   const existingUser = await UserModel.findOne({email:userInfo.email})
+   if(existingUser){
+    res.status(200).json({
+        message:"Đăng nhập thành công",
+        status:200,
+        data:{
+            id:existingUser.id,
+            email:existingUser.email,
+            fullname:existingUser?.fullname,
+            isAdmin:existingUser.isAdmin,
+            photoUrl:existingUser?.photoUrl,
+            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin),    
+            fcmTokens:existingUser.fcmTokens ?? [],
+            phoneNumber:existingUser.phoneNumber,
+            bio:existingUser.bio
+        }
+    })
+   }else{
+    const newUser = new UserModel({
+        email:userInfo.email,
+        fullname:userInfo.name,
+        photoUrl:userInfo.photo,
+        isAdmin:false
+    })
+    await newUser.save()
+    res.status(200).json({
+        message:"Đăng nhập thành công",
+        status:200,
+        data:{
+            id:newUser.id,
+            email:newUser.email,
+            fullname:newUser?.fullname,
+            isAdmin:newUser.isAdmin,
+            photoUrl:newUser?.photoUrl,
+            accesstoken: await getJsonWebToken(newUser.email,newUser.id,newUser.isAdmin),    
+            fcmTokens:newUser.fcmTokens ?? [],
+            phoneNumber:newUser.phoneNumber,
+            bio:newUser.bio
+        }
+    })
+
+   }
+})
 
 const verification = asyncHandle(async(req,res)=>{
     const {email} = req.body
@@ -151,5 +195,6 @@ module.exports = {
     login,
     verification,
     forgotPassword,
-    verificationForgotPassword
+    verificationForgotPassword,
+    loginWithGoogle
 }

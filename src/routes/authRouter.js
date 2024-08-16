@@ -8,5 +8,6 @@ authRouter.post('/login',authController.login)
 authRouter.post('/verification',authController.verification)
 authRouter.post('/forgotPassword',authController.forgotPassword)
 authRouter.post('/verificationForgotPassword',authController.verificationForgotPassword)
+authRouter.post('/login-with-google',authController.loginWithGoogle)
 
 module.exports = authRouter
