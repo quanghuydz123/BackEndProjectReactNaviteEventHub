@@ -61,7 +61,6 @@ const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => 
   await Promise.all(RecipientIds.map(async (id) => {
     const user = await UserModel.findById(id);
     const fcmTokens = user.fcmTokens;
-
     if (fcmTokens.length > 0) {
       await Promise.all(fcmTokens.map(async (fcmToken) => {
         await handleSendNotification({
@@ -122,8 +121,18 @@ const getAll = asyncHandle(async (req, res) => {
   })
 })
 const getnotificationsById = asyncHandle(async (req, res) => {
-  const { uid } = req.query
-  const notifications = await NotificationModel.find({ recipientId: uid }).populate({
+  const { idUser,typeFillter,statusFillter } = req.query
+  const filter = {}
+  if(idUser){
+    filter.recipientId = {$eq:idUser}
+  }
+  if(statusFillter){
+    filter.status = {$eq:statusFillter}
+  }
+  if(typeFillter){
+    filter.type = {$eq:typeFillter}
+  }
+  const notifications = await NotificationModel.find(filter).populate({
     path: 'senderID recipientId',
   })
     .populate({
