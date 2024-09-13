@@ -48,6 +48,7 @@ const getAccessToken = () => {
         reject(err);
         return;
       }
+      console.log("tokens.access_token",tokens.access_token)
       resolve(tokens.access_token);
     });
   });
@@ -121,7 +122,7 @@ const getAll = asyncHandle(async (req, res) => {
   })
 })
 const getnotificationsById = asyncHandle(async (req, res) => {
-  const { idUser,typeFillter,statusFillter } = req.query
+  const { idUser,typeFillter,statusFillter,limit } = req.query
   const filter = {}
   if(idUser){
     filter.recipientId = {$eq:idUser}
@@ -142,7 +143,7 @@ const getnotificationsById = asyncHandle(async (req, res) => {
         { path: 'authorId' },
         { path: 'users' }
       ]
-    }).sort({ "createdAt": -1 });
+    }).limit(limit ?? 0).sort({ "createdAt": -1 });
   res.status(200).json({
     status: 200,
     message: 'Thành công',

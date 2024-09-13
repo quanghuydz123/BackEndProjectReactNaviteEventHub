@@ -9,5 +9,6 @@ notificationRouter.get('/get-notifications-byId',notificationController.getnotif
 notificationRouter.put('/update-isViewed-notifitions',notificationController.updateIsViewedNotifications)
 notificationRouter.delete('/delete-notifications',notificationController.deleteNotifications)
 notificationRouter.put('/update-status-notifitions',notificationController.updateStatusNotifications)
+notificationRouter.get('/get-asscess',notificationController.getAccessToken)
 
 module.exports = notificationRouter

@@ -122,13 +122,22 @@ const getFollowById = asyncHandle(async (req, res) => {
             }
         }
     }).countDocuments();
+    const yourFollowers = await FollowModel.find({
+        users: {
+            $elemMatch: {
+                idUser: uid,
+                status: true
+            }
+        }
+    }).populate('user users.idUser');
     if (follower) {
         res.status(200).json({
             status: 200,
             message: 'Lấy follower thành công',
             data: {
                 followers: follower,
-                numberOfFollowers
+                numberOfFollowers,
+                yourFollowers
             }
         })
     }

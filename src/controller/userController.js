@@ -6,7 +6,7 @@ require('dotenv').config()
 
 
 const getAll = asyncHandle( async (req, res) => {
-    const allUser = await UserModel.find()
+    const allUser = await UserModel.find().populate('idRole')
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -99,6 +99,21 @@ const updateProfile  = asyncHandle( async (req, res) => {
     
 })
 
+const updateRole  = asyncHandle( async (req, res) => {
+    const updateRoleUser = await UserModel.updateMany({},{idRole:'66c523b677cc482c91fcaa61'},{new:true})
+    if(updateRoleUser){
+        res.status(200).json({
+            statusCode:200,
+            message:'Cập nhập thành công',
+            data:{
+                user:updateRoleUser
+            }
+        })
+    }else{
+        res.status(401)
+        throw new Error('Cập nhập thông tin không thành công')
+    }
+})
 
 module.exports = {
     getAll,
@@ -106,5 +121,6 @@ module.exports = {
     updateFcmtoken,
     getUserById,
     updateProfile,
+    updateRole
     
 }

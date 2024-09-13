@@ -5,13 +5,17 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const EmailService = require('../service/EmailService')
 require('dotenv').config()
+const RoleModel = require("../models/RoleModel")
 
 //asyncHandle có xử lý đến fontend
-const getJsonWebToken = async (email,id,isAdmin) => {
+const getJsonWebToken = async (email,id,key,name) => {
     const payload = {
         email,
         id,
-        isAdmin
+        role:{
+            key,
+            name
+        }
     }
     const token = jwt.sign(payload,process.env.SECRET_KEY,{expiresIn:'7d'})
     return token
@@ -30,7 +34,7 @@ const register = asyncHandle( async (req, res) => {
         email,
         fullname:username || 'Người dùng',
         password:hashedPassword,
-        isAdmin:false
+        idRole:'66c523b677cc482c91fcaa61'
     })
 
     await newUser.save()
@@ -42,13 +46,13 @@ const register = asyncHandle( async (req, res) => {
             email:newUser.email,
             id:newUser.id,
             fullname:newUser.fullname,
-            accesstoken: await getJsonWebToken(email,newUser.id,newUser.isAdmin)
+            accesstoken: await getJsonWebToken(email,newUser.id,newUser.idRole.key,newUser.idRole.name)
         }
     })
 })
 const login = asyncHandle(async (req,res)=>{
     const {email,password} = req.body
-    const existingUser = await UserModel.findOne({email})
+    const existingUser = await UserModel.findOne({email}).populate('idRole')
     if(!existingUser){
         res.status(200).json({
             message:"Email chưa được đăng ký!!!",
@@ -60,6 +64,7 @@ const login = asyncHandle(async (req,res)=>{
         res.status(403)//ngăn không cho xuống dưới
         throw new Error('Email hoặc mật khẩu không chỉnh xác!!!')
     }
+    console.log("existingUser.idRole",existingUser.idRole)
     res.status(200).json({
         message:"Đăng nhập thành công",
         statusCode:200,
@@ -67,11 +72,11 @@ const login = asyncHandle(async (req,res)=>{
             id:existingUser.id,
             email:existingUser.email,
             fullname:existingUser?.fullname,
-            isAdmin:existingUser.isAdmin,
             photoUrl:existingUser?.photoUrl,
-            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin),    
+            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.idRole.key,existingUser.idRole.name),    
             fcmTokens:existingUser.fcmTokens ?? [],
             phoneNumber:existingUser.phoneNumber,
+            role:existingUser.idRole,
             bio:existingUser.bio
         }
     })
@@ -79,7 +84,7 @@ const login = asyncHandle(async (req,res)=>{
 
 const loginWithGoogle = asyncHandle(async (req,res)=>{
    const userInfo = req.body
-   const existingUser = await UserModel.findOne({email:userInfo.email})
+   const existingUser = await UserModel.findOne({email:userInfo.email}).populate('idRole')
    if(existingUser){
     res.status(200).json({
         message:"Đăng nhập thành công",
@@ -88,11 +93,11 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             id:existingUser.id,
             email:existingUser.email,
             fullname:existingUser?.fullname,
-            isAdmin:existingUser.isAdmin,
             photoUrl:existingUser?.photoUrl,
-            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.isAdmin),    
+            accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.idRole.key,existingUser.idRole.name),    
             fcmTokens:existingUser.fcmTokens ?? [],
             phoneNumber:existingUser.phoneNumber,
+            role:existingUser?.idRole,
             bio:existingUser.bio
         }
     })
@@ -101,7 +106,7 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
         email:userInfo.email,
         fullname:userInfo.name,
         photoUrl:userInfo.photo,
-        isAdmin:false
+        idRole:'66c523b677cc482c91fcaa61'
     })
     await newUser.save()
     res.status(200).json({
@@ -111,11 +116,11 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             id:newUser.id,
             email:newUser.email,
             fullname:newUser?.fullname,
-            isAdmin:newUser.isAdmin,
             photoUrl:newUser?.photoUrl,
-            accesstoken: await getJsonWebToken(newUser.email,newUser.id,newUser.isAdmin),    
+            accesstoken: await getJsonWebToken(newUser.email,newUser.id,newUser.idRole.key,newUser.idRole.name),    
             fcmTokens:newUser.fcmTokens ?? [],
             phoneNumber:newUser.phoneNumber,
+            role:existingUser?.idRole,
             bio:newUser.bio
         }
     })
@@ -190,11 +195,45 @@ const forgotPassword = asyncHandle(async(req,res)=>{
         }
     })
 })
+
+const createRole = asyncHandle(async(req,res)=>{
+    const {key,name} = req.body
+    const createRole = await RoleModel.create({
+        key,
+        name
+    })
+    res.status(200).json({
+        status: 200,
+        message: 'thêm mới role thành công',
+        data: {
+            role:createRole
+        }
+
+    })
+})
+
+const updateRole = asyncHandle(async(req,res)=>{
+    const {key,name} = req.body
+    const createRole = await RoleModel.create({
+        key,
+        name
+    })
+    res.status(200).json({
+        status: 200,
+        message: 'thêm mới role thành công',
+        data: {
+            role:createRole
+        }
+
+    })
+})
 module.exports = {
     register,
     login,
     verification,
     forgotPassword,
     verificationForgotPassword,
-    loginWithGoogle
+    loginWithGoogle,
+    createRole,
+    updateRole
 }

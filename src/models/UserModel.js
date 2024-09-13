@@ -16,6 +16,10 @@ const UserSchema = new mongoose.Schema({
         lng:{type:Number}
     },
     fcmTokens:[{type:String}],
+    idRole:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'roles',
+    },
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

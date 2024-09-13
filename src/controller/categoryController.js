@@ -11,7 +11,6 @@ const addCategory = asyncHandle(async (req, res) => {
             name,
             image
         })
-        console.log("createCategory",createCategory)
         if(createCategory){
             res.status(200).json({
                 message:'Thêm thành công',
