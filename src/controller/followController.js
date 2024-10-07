@@ -168,12 +168,12 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             const createNotification = await NotificationModel.create({
                 senderID: idUser,
                 recipientId: idUserOther,
-                type: 'follow',
-                content: `muốn theo dõi bạn !!!`,
+                type: 'allowFollow',
+                content: `vừa mới theo dõi bạn !!!`,
                 status: 'unanswered',
                 isRead: false
             })
-            users.push({ idUser: idUserOther, idNotification: createNotification.id })
+            users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true })
             const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
             const user = await UserModel.findById(idUser)
             const userOther = await UserModel.findById(idUserOther)
@@ -184,7 +184,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                         fcmToken: fcmToken,
                         title: 'Thông báo',
                         subtitle: '',
-                        body: `${user.fullname} muốn theo dõi bạn theo dõi`,
+                        body: `${user.fullname} vừa mới dõi bạn theo dõi`,
                         data: {
 
                         }
