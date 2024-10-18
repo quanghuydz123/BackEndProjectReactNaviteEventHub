@@ -61,14 +61,14 @@ const getAllFollow = asyncHandle(async (req, res) => {
         .populate({
             path: 'user categories users.idUser',
         })
-        .populate({
-            path: 'events',
-            populate: [
-                { path: 'categories' },
-                { path: 'authorId' },
-                { path: 'users' }
-            ]
-        });
+        // .populate({
+        //     path: 'events',
+        //     populate: [
+        //         { path: 'category' },
+        //         { path: 'authorId' },
+        //         { path: 'users' }
+        //     ]
+        // });
     res.status(200).json({
         status: 200,
         message: 'Lấy allFollower thành công',
@@ -106,14 +106,14 @@ const getFollowById = asyncHandle(async (req, res) => {
         .populate({
             path: 'user categories users.idUser',
         })
-        .populate({
-            path: 'events',
-            populate: [
-                { path: 'categories' },
-                { path: 'authorId' },
-                { path: 'users' }
-            ]
-        });
+        // .populate({
+        //     path: 'events',
+        //     populate: [
+        //         { path: 'category' },
+        //         { path: 'authorId' },
+        //         { path: 'users' }
+        //     ]
+        // });
     const numberOfFollowers = await FollowModel.find({
         users: {
             $elemMatch: {
@@ -212,7 +212,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             status: 'unanswered',
             isRead: false
         })
-        users.push({ idUser: idUserOther, idNotification: createNotification.id })
+        users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true})
         const createfollowUserOther = await FollowModel.create({
             user: idUser,
             users: users

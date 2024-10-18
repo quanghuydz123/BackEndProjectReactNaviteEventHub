@@ -108,9 +108,9 @@ const getAll = asyncHandle(async (req, res) => {
     .populate({
       path: 'eventId',
       populate: [
-        { path: 'categories' },
+        { path: 'category' },
         { path: 'authorId' },
-        { path: 'users' }
+        { path: 'usersInterested', select: '_id fullname email photoUrl' }
       ]
     });
   res.status(200).json({
@@ -139,9 +139,9 @@ const getnotificationsById = asyncHandle(async (req, res) => {
     .populate({
       path: 'eventId',
       populate: [
-        { path: 'categories' },
+        { path: 'category' },
         { path: 'authorId' },
-        { path: 'users' }
+        { path: 'usersInterested' }
       ]
     }).limit(limit ?? 0).sort({ "createdAt": -1 });
   res.status(200).json({
@@ -187,7 +187,7 @@ const updateStatusNotifications = asyncHandle(async (req, res) => {
         $set: {
           'users.$[x].status': true,
         }
-      }, {
+      },{
         arrayFilters: [
           { "x._id": userFollow.id }
         ]

@@ -5,7 +5,7 @@ const calsDistanceLocation = require("../utils/calsDistanceLocation")
 
 
 const addEvent = asyncHandle(async (req, res) => {
-    const { title, description, Address, addressDetals, Location, position, photoUrl, price, users, categories, authorId, startAt, endAt,  } = req.body
+    const { title, description, Address, addressDetals, Location, position, photoUrl, price, users, category, authorId, startAt, endAt,  } = req.body
     if (req.body) {
         const createEvent = await EventModel.create({
             title,
@@ -17,7 +17,7 @@ const addEvent = asyncHandle(async (req, res) => {
             photoUrl,
             price,
             users,
-            categories,
+            category,
             authorId,
             startAt,
             endAt,
@@ -43,7 +43,7 @@ const addEvent = asyncHandle(async (req, res) => {
 
 const getAllEvent = asyncHandle(async (req, res) => {
     const {limit,limitDate} = req.query
-    const events = await EventModel.find({date:{$gte:limitDate}}).populate('categories users authorId').sort({"startAt":1})
+    const events = await EventModel.find({date:{$gte:limitDate}}).populate('category users authorId').sort({"startAt":1})
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -59,8 +59,11 @@ const getEvents = asyncHandle(async (req, res) => {
     const filter = {}
     const regex = new RegExp(searchValue ?? '', 'i')//để cho không phân biệt hoa thường
     filter.title = {'$regex': regex}
+    // if(categoriesFilter){
+    //     filter.categories = {$in:[categoriesFilter]}
+    // }
     if(categoriesFilter){
-        filter.categories = {$in:[categoriesFilter]}
+        filter.category = {$in:categoriesFilter}
     }
     if(startAt && endAt){
         filter.startAt = {$gte:new Date(startAt).getTime()}
@@ -73,7 +76,11 @@ const getEvents = asyncHandle(async (req, res) => {
     } else if (maxPrice) {
         filter.price = { $lte: maxPrice };
     }
-    const events = await EventModel.find(filter).populate('categories users authorId').limit(limit ?? 0).sort({"startAt":1})
+    const events = await EventModel.find(filter)
+    .populate('category', '_id name image')
+    .populate('authorId')
+    .populate('usersInterested', '_id fullname email photoUrl')
+    .limit(limit ?? 0).sort({"startAt":1})
     if(lat && long && distance){
         const eventsNearYou = []
         if(events.length > 0 ){
@@ -113,7 +120,11 @@ const updateFollowerEvent = asyncHandle(async (req, res) => {
 })
 const getEventById = asyncHandle(async (req, res) => {
     const {eid} = req.query
-    const event = await EventModel.findById(eid).populate('categories users authorId')
+    const event = await EventModel.findById(eid)
+    .populate('category', '_id name image')
+    .populate('usersInterested', '_id fullname email photoUrl')
+    .populate('authorId')
+    console.log("event",event)
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -125,7 +136,7 @@ const getEventById = asyncHandle(async (req, res) => {
 
 const updateEvent = asyncHandle(async (req, res) => {
     const {categories} = req.body
-    const event = await EventModel.updateMany({},{$unset:{'category':1}})
+    const event = await EventModel.updateMany({},{$unset:{'categories':1}})
     res.status(200).json({
         status:200,
         message:'Thành công',

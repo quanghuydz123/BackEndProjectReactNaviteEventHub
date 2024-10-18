@@ -11,8 +11,8 @@ const socketIO = require('socket.io')(http, {
     cors: {
         origin: "<http://localhost:3000>"
     }
-});const port = 3001
-
+})
+const port = 3001
 
 
 

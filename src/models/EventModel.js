@@ -9,25 +9,29 @@ const EventSchema = new mongoose.Schema({
     Location:{type:String,required:true},
     position:{type:Object,required:true},
     price:{type:Number},
-    // category:{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Categories',
-    //     required: true,
-    // },
-    categories:[{
+    category:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Categories',
         required: true,
-    }],
+    },
+    // categories:[{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Categories',
+    //     required: true,
+    // }],
     authorId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true,
     },
-    users:[{
+    // users:[{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'users',
+    //     required: true,
+    // }],
+    usersInterested:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
-        required: true,
     }],
     startAt:{type:Date,required:true},
     endAt:{type:Date,required:true},

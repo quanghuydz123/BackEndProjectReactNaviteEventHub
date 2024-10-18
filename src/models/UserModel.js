@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
     phoneNumber:{type:String},
     bio:{
         type:String
-    },
+    },  
     position:{
         lat:{type:Number},
         lng:{type:Number}
@@ -20,6 +20,11 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'roles',
     },
+    eventsInterested:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'events',
+        default:[]
+    }],
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

@@ -36,9 +36,7 @@ const register = asyncHandle( async (req, res) => {
         password:hashedPassword,
         idRole:'66c523b677cc482c91fcaa61'
     })
-
     await newUser.save()
-
     res.status(200).json({
         statusCode:200,
         message: "Đăng ký thành công",
@@ -59,7 +57,7 @@ const login = asyncHandle(async (req,res)=>{
             statusCode:'ERR',
         })
     }
-    const isMathPassword = await bcrypt.compare(password,existingUser.password)
+    const isMathPassword = bcrypt.compare(password,existingUser.password)
     if(!isMathPassword){
         res.status(403)//ngăn không cho xuống dưới
         throw new Error('Email hoặc mật khẩu không chỉnh xác!!!')
@@ -77,7 +75,8 @@ const login = asyncHandle(async (req,res)=>{
             fcmTokens:existingUser.fcmTokens ?? [],
             phoneNumber:existingUser.phoneNumber,
             role:existingUser.idRole,
-            bio:existingUser.bio
+            bio:existingUser.bio,
+            eventsInterested:existingUser.eventsInterested ?? []
         }
     })
 })
@@ -98,7 +97,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             fcmTokens:existingUser.fcmTokens ?? [],
             phoneNumber:existingUser.phoneNumber,
             role:existingUser?.idRole,
-            bio:existingUser.bio
+            bio:existingUser.bio,
+            eventsInterested:existingUser.eventsInterested ?? []
         }
     })
    }else{

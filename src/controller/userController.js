@@ -1,4 +1,5 @@
 const UserModel = require("../models/UserModel")
+const EventModel = require("../models/EventModel")
 const asyncHandle = require('express-async-handler')
 const http = require('http')
 require('dotenv').config()
@@ -115,12 +116,56 @@ const updateRole  = asyncHandle( async (req, res) => {
     }
 })
 
+const interestEvent = asyncHandle( async (req, res) => {
+    const { idUser, idEvent } = req.body
+    const user = await UserModel.findById(idUser)
+    const event = await EventModel.findById(idEvent)
+    if(user && event){
+        const eventsInterestedByUser = [...user.eventsInterested]
+        const usersInterestedEvent = [...event.usersInterested]
+        const indexEventInterested = eventsInterestedByUser.findIndex(item => item.toString() === idEvent.toString())
+        const indexUserInterested = usersInterestedEvent.findIndex(item => item.toString() === idUser.toString())
+        if((indexEventInterested !== -1) && (indexUserInterested !== -1)){
+            eventsInterestedByUser.splice(indexEventInterested,1)
+            usersInterestedEvent.splice(indexUserInterested,1)
+            const updateUser = await UserModel.findByIdAndUpdate(idUser,{eventsInterested:eventsInterestedByUser},{new:true})
+            const updateEvent = await EventModel.findByIdAndUpdate(idEvent,{usersInterested:usersInterestedEvent},{new:true})
+            res.status(200).json({
+                status:200,
+                message:'Cập nhập thành công',
+                data:{
+                    user:updateUser,
+                    event:updateEvent
+                }
+            })
+        }else{
+            eventsInterestedByUser.push(idEvent)
+            usersInterestedEvent.push(idUser)
+            const updateUser = await UserModel.findByIdAndUpdate(idUser,{eventsInterested:eventsInterestedByUser},{new:true})
+            const updateEvent = await EventModel.findByIdAndUpdate(idEvent,{usersInterested:usersInterestedEvent},{new:true})
+            res.status(200).json({
+                status:200,
+                message:'Cập nhập thành công',
+                data:{
+                    user:updateUser,
+                    event:updateEvent
+                }
+            })
+        }
+
+    }else{
+        res.status(401)
+        throw new Error('Người dùng hoặc sự kiện không tồn tại')
+    }
+    
+})
 module.exports = {
     getAll,
     updatePositionUser,
     updateFcmtoken,
     getUserById,
     updateProfile,
-    updateRole
+    updateRole,
+    interestEvent
     
 }

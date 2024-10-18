@@ -6,7 +6,7 @@
 #
 .env
 build/
-src/placeholder/adminsdk.json
+src/placeholders/adminsdk.json
 
 # Android/IntelliJ
 #
