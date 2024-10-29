@@ -1,163 +1,241 @@
 const UserModel = require("../models/UserModel")
 const EventModel = require("../models/EventModel")
+const CategoryModel = require("../models/CategoryModel")
 const asyncHandle = require('express-async-handler')
 const http = require('http')
 require('dotenv').config()
 
 
 
-const getAll = asyncHandle( async (req, res) => {
+const getAll = asyncHandle(async (req, res) => {
     const allUser = await UserModel.find().populate('idRole')
     res.status(200).json({
-        status:200,
-        message:'Thành công',
-        data:{
-            users:allUser
+        status: 200,
+        message: 'Thành công',
+        data: {
+            users: allUser
         }
     })
 })
 
-const updatePositionUser = asyncHandle( async (req, res) => {
-    const {id,lat,lng} = req.body
+const updatePositionUser = asyncHandle(async (req, res) => {
+    const { id, lat, lng } = req.body
     const user = await UserModel.findById(id)
-    if(!user){
+    if (!user) {
         res.status(400)//ngăn không cho xuống dưới
         throw new Error('Người dùng không tồn tại')
     }
-    const updateUser = await UserModel.findByIdAndUpdate(id,{position:{lat:lat,lng:lng}},{new:true})
+    const updateUser = await UserModel.findByIdAndUpdate(id, { position: { lat: lat, lng: lng } }, { new: true })
     res.status(200).json({
-        status:200,
-        message:'Cập nhập position user thành công',
-        data:{
-            user:updateUser
+        status: 200,
+        message: 'Cập nhập position user thành công',
+        data: {
+            user: updateUser
         }
     })
 })
 
-const updateFcmtoken  = asyncHandle( async (req, res) => {
-    const {uid,fcmtokens} = req.body
-    const updateUser = await UserModel.findByIdAndUpdate(uid,{fcmTokens:fcmtokens},{new:true})
+const updateFcmtoken = asyncHandle(async (req, res) => {
+    const { uid, fcmtokens } = req.body
+    const updateUser = await UserModel.findByIdAndUpdate(uid, { fcmTokens: fcmtokens }, { new: true })
     res.status(200).json({
-        status:200,
-        message:'Thành công',
-        data:{
-            fcmTokens:updateUser.fcmTokens ?? [],
+        status: 200,
+        message: 'Thành công',
+        data: {
+            fcmTokens: updateUser.fcmTokens ?? [],
         }
     })
 })
 
 
-const getUserById  = asyncHandle( async (req, res) => {
-    const {uid} = req.query
+const getUserById = asyncHandle(async (req, res) => {
+    const { uid } = req.query
     // const Token = await notificationController.getAccessToken()
     // console.log("res",Token)
-    if(uid){
+    if (uid) {
         const userDetails = await UserModel.findById(uid)
         res.status(200).json({
-            status:200,
-            message:'Thành công',
-            data:{
-                user:userDetails
+            status: 200,
+            message: 'Thành công',
+            data: {
+                user: userDetails
             }
         })
-    }else{
+    } else {
         res.status(401)
         throw new Error('Người dùng không tồn tại')
     }
-    
+
 })
-const updateProfile  = asyncHandle( async (req, res) => {
-    const {fullname,phoneNumber,bio,_id,photoUrl} = req.body
-    if(!photoUrl){
-        const updateUser = await UserModel.findByIdAndUpdate(_id,{fullname,phoneNumber,bio},{new:true})
-        if(updateUser){
+const updateProfile = asyncHandle(async (req, res) => {
+    const { fullname, phoneNumber, bio, _id, photoUrl } = req.body
+    if (!photoUrl) {
+        const updateUser = await UserModel.findByIdAndUpdate(_id, { fullname, phoneNumber, bio }, { new: true })
+        if (updateUser) {
             res.status(200).json({
-                statusCode:200,
-                message:'Cập nhập thành công',
-                data:{
-                    user:updateUser
+                statusCode: 200,
+                message: 'Cập nhập thành công',
+                data: {
+                    user: updateUser
                 }
             })
-        }else{
+        } else {
             res.status(401)
             throw new Error('Cập nhập thông tin không thành công')
         }
-    }else{
-        const updateUser = await UserModel.findByIdAndUpdate(_id,{photoUrl},{new:true})
-        if(updateUser){
+    } else {
+        const updateUser = await UserModel.findByIdAndUpdate(_id, { photoUrl }, { new: true })
+        if (updateUser) {
             res.status(200).json({
-                statusCode:200,
-                message:'Cập nhập thành công',
-                data:{
-                    user:updateUser
+                statusCode: 200,
+                message: 'Cập nhập thành công',
+                data: {
+                    user: updateUser
                 }
             })
-        }else{
+        } else {
             res.status(401)
             throw new Error('Cập nhập thông tin không thành công')
         }
     }
-    
+
 })
 
-const updateRole  = asyncHandle( async (req, res) => {
-    const updateRoleUser = await UserModel.updateMany({},{idRole:'66c523b677cc482c91fcaa61'},{new:true})
-    if(updateRoleUser){
+const updateRole = asyncHandle(async (req, res) => {
+    const updateRoleUser = await UserModel.updateMany({}, { idRole: '66c523b677cc482c91fcaa61' }, { new: true })
+    if (updateRoleUser) {
         res.status(200).json({
-            statusCode:200,
-            message:'Cập nhập thành công',
-            data:{
-                user:updateRoleUser
+            statusCode: 200,
+            message: 'Cập nhập thành công',
+            data: {
+                user: updateRoleUser
             }
         })
-    }else{
+    } else {
         res.status(401)
         throw new Error('Cập nhập thông tin không thành công')
     }
 })
 
-const interestEvent = asyncHandle( async (req, res) => {
+const interestCategory = asyncHandle(async (req, res) => {
+    const { idUser, idsCategory } = req.body;
+    const user = await UserModel.findById(idUser);
+    if (user) {
+        // Tạo bản sao của `categoriesInterested`
+        let categoriesInterestedByUser = [...user.categoriesInterested];
+
+        // Thêm các `idCategory` từ `idsCategory` vào `categoriesInterestedByUser` nếu chưa có
+        await Promise.all(idsCategory.map(async (idCategory) => {
+            const category = await CategoryModel.findById(idCategory);
+            if (category) {
+                const usersInterestedCategory = [...category.usersInterested];
+
+                const indexCategoryInterested = categoriesInterestedByUser.findIndex(
+                    item => item.category.toString() === idCategory.toString()
+                );
+                const indexUserInterested = usersInterestedCategory.findIndex(
+                    item => item.user.toString() === idUser.toString()
+                );
+
+                if (indexCategoryInterested === -1 && indexUserInterested === -1) {
+                    categoriesInterestedByUser.push({ category: idCategory });
+                    usersInterestedCategory.push({ user: idUser });
+                    await CategoryModel.findByIdAndUpdate(idCategory, { usersInterested: usersInterestedCategory }, { new: true });
+                }
+            } else {
+                res.status(401);
+                throw new Error('Thể loại không tồn tại');
+            }
+        }));
+
+        // Lọc `categoriesInterestedByUser` để giữ lại các `idCategory` có trong `idsCategory`
+        const categoriesToKeep = categoriesInterestedByUser.filter(item =>
+            idsCategory.includes(item.category.toString())
+        );
+
+        // Tìm các `idCategory` cần xóa khỏi `categoriesInterestedByUser`
+        const categoriesToRemove = categoriesInterestedByUser.filter(item => 
+            !idsCategory.includes(item.category.toString())
+        );
+
+        // Xóa `idUser` khỏi `usersInterested` của các `Category` không còn được quan tâm
+        await Promise.all(categoriesToRemove.map(async (item) => {
+            const category = await CategoryModel.findById(item.category);
+            if (category) {
+                const updatedUsersInterested = category.usersInterested.filter(
+                    userItem => userItem.user.toString() !== idUser.toString()
+                );
+                await CategoryModel.findByIdAndUpdate(item.category, { usersInterested: updatedUsersInterested }, { new: true });
+            }
+        }));
+
+        // Cập nhật lại `categoriesInterestedByUser` của `user`
+        const newUser = await UserModel.findByIdAndUpdate(
+            idUser,
+            { categoriesInterested: categoriesToKeep },
+            { new: true }
+        ).populate({
+            path: 'categoriesInterested.category',
+            select: '_id name image'
+        }).select('-categoriesInterested.createdAt -categoriesInterested._id');;
+
+        res.status(200).json({
+            status: 200,
+            message: 'Cập nhật thành công',
+            data: {
+                user: newUser,
+            }
+        });
+    } else {
+        res.status(401);
+        throw new Error('Người dùng không tồn tại');
+    }
+});
+
+
+
+const interestEvent = asyncHandle(async (req, res) => {
     const { idUser, idEvent } = req.body
     const user = await UserModel.findById(idUser)
     const event = await EventModel.findById(idEvent)
-    if(user && event){
+    if (user && event) {
         const eventsInterestedByUser = [...user.eventsInterested]
         const usersInterestedEvent = [...event.usersInterested]
-        const indexEventInterested = eventsInterestedByUser.findIndex(item => item.toString() === idEvent.toString())
-        const indexUserInterested = usersInterestedEvent.findIndex(item => item.toString() === idUser.toString())
-        if((indexEventInterested !== -1) && (indexUserInterested !== -1)){
-            eventsInterestedByUser.splice(indexEventInterested,1)
-            usersInterestedEvent.splice(indexUserInterested,1)
-            const updateUser = await UserModel.findByIdAndUpdate(idUser,{eventsInterested:eventsInterestedByUser},{new:true})
-            const updateEvent = await EventModel.findByIdAndUpdate(idEvent,{usersInterested:usersInterestedEvent},{new:true})
+        const indexEventInterested = eventsInterestedByUser.findIndex(item => item.event.toString() === idEvent.toString())
+        const indexUserInterested = usersInterestedEvent.findIndex(item => item.user.toString() === idUser.toString())
+        if ((indexEventInterested !== -1) && (indexUserInterested !== -1)) {
+            eventsInterestedByUser.splice(indexEventInterested, 1)
+            usersInterestedEvent.splice(indexUserInterested, 1)
+            const updateUser = await UserModel.findByIdAndUpdate(idUser, { eventsInterested: eventsInterestedByUser }, { new: true })
+            const updateEvent = await EventModel.findByIdAndUpdate(idEvent, { usersInterested: usersInterestedEvent }, { new: true })
             res.status(200).json({
-                status:200,
-                message:'Cập nhập thành công',
-                data:{
-                    user:updateUser,
-                    event:updateEvent
+                status: 200,
+                message: 'Cập nhập thành công',
+                data: {
+                    user: updateUser,
+                    event: updateEvent
                 }
             })
-        }else{
-            eventsInterestedByUser.push(idEvent)
-            usersInterestedEvent.push(idUser)
-            const updateUser = await UserModel.findByIdAndUpdate(idUser,{eventsInterested:eventsInterestedByUser},{new:true})
-            const updateEvent = await EventModel.findByIdAndUpdate(idEvent,{usersInterested:usersInterestedEvent},{new:true})
+        } else {
+            eventsInterestedByUser.push({ event: idEvent })
+            usersInterestedEvent.push({ user: idUser })
+            const updateUser = await UserModel.findByIdAndUpdate(idUser, { eventsInterested: eventsInterestedByUser }, { new: true })
+            const updateEvent = await EventModel.findByIdAndUpdate(idEvent, { usersInterested: usersInterestedEvent }, { new: true })
             res.status(200).json({
-                status:200,
-                message:'Cập nhập thành công',
-                data:{
-                    user:updateUser,
-                    event:updateEvent
+                status: 200,
+                message: 'Cập nhập thành công',
+                data: {
+                    user: updateUser,
+                    event: updateEvent
                 }
             })
         }
 
-    }else{
+    } else {
         res.status(401)
         throw new Error('Người dùng hoặc sự kiện không tồn tại')
     }
-    
+
 })
 module.exports = {
     getAll,
@@ -166,6 +244,7 @@ module.exports = {
     getUserById,
     updateProfile,
     updateRole,
-    interestEvent
-    
+    interestEvent,
+    interestCategory
+
 }

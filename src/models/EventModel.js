@@ -14,24 +14,22 @@ const EventSchema = new mongoose.Schema({
         ref: 'Categories',
         required: true,
     },
-    // categories:[{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Categories',
-    //     required: true,
-    // }],
     authorId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true,
     },
-    // users:[{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'users',
-    //     required: true,
-    // }],
     usersInterested:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'users',
+        user:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
+            require:true
+            
+        },
+        createdAt:{
+            type: Date,
+            default:Date.now()
+        }
     }],
     startAt:{type:Date,required:true},
     endAt:{type:Date,required:true},

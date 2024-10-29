@@ -4,7 +4,6 @@ const cors = require('cors')
 const routes = require('./src/routes')
 const connectDb = require('./src/configs/connectDb')
 const errorMiddleHandle = require('./src/middlewares/errorMiddlewares')
-const socketIo = require('socket.io');
 require('dotenv').config()
 const http = require("http").Server(app);
 const socketIO = require('socket.io')(http, {
@@ -37,18 +36,18 @@ socketIO.on('connection', (socket) => {
     });
 
     socket.on('followUser', (data) => {
-        console.log('followUser:', 'truyền lại nè');
-        socketIO.emit('followUser','truyền lại nè')
+        console.log('followUser:', data);
+        socketIO.emit('followUser',data)
     });
 
     socket.on('updateUser', (data) => {
         console.log('updateUser:', data);
-        socketIO.emit('updateUser','truyền lại nè')
+        socketIO.emit('updateUser',data)
     });
 
     socket.on('getNotifications', (data) => {
         console.log('getNotifications', data);
-        socketIO.emit('getNotifications','truyền lại nè')
+        socketIO.emit('getNotifications',data)
     });
 
 

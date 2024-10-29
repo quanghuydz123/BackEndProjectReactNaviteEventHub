@@ -50,9 +50,12 @@ const register = asyncHandle( async (req, res) => {
 })
 const login = asyncHandle(async (req,res)=>{
     const {email,password} = req.body
-    const existingUser = await UserModel.findOne({email}).populate('idRole')
+    const existingUser = await UserModel.findOne({email}).populate('idRole').populate({
+        path: 'categoriesInterested.category',
+        select: '_id name image'
+    }).select('-categoriesInterested.createdAt -categoriesInterested._id');
     if(!existingUser){
-        res.status(200).json({
+        res.status(200).json({  
             message:"Email chưa được đăng ký!!!",
             statusCode:'ERR',
         })
@@ -76,14 +79,18 @@ const login = asyncHandle(async (req,res)=>{
             phoneNumber:existingUser.phoneNumber,
             role:existingUser.idRole,
             bio:existingUser.bio,
-            eventsInterested:existingUser.eventsInterested ?? []
+            eventsInterested:existingUser.eventsInterested ?? [],
+            categoriesInterested:existingUser?.categoriesInterested ?? []
         }
     })
 })
 
 const loginWithGoogle = asyncHandle(async (req,res)=>{
    const userInfo = req.body
-   const existingUser = await UserModel.findOne({email:userInfo.email}).populate('idRole')
+   const existingUser = await UserModel.findOne({email:userInfo.email}).populate('idRole').populate({
+    path: 'categoriesInterested.category',
+    select: '_id name image'
+    }).select('-categoriesInterested.createdAt -categoriesInterested._id');
    if(existingUser){
     res.status(200).json({
         message:"Đăng nhập thành công",
@@ -98,7 +105,9 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             phoneNumber:existingUser.phoneNumber,
             role:existingUser?.idRole,
             bio:existingUser.bio,
-            eventsInterested:existingUser.eventsInterested ?? []
+            eventsInterested:existingUser.eventsInterested ?? [],
+            categoriesInterested:existingUser?.categoriesInterested ?? []
+
         }
     })
    }else{
@@ -120,8 +129,10 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             accesstoken: await getJsonWebToken(newUser.email,newUser.id,newUser.idRole.key,newUser.idRole.name),    
             fcmTokens:newUser.fcmTokens ?? [],
             phoneNumber:newUser.phoneNumber,
-            role:existingUser?.idRole,
-            bio:newUser.bio
+            role:newUser?.idRole,
+            bio:newUser.bio,
+            eventsInterested:newUser.eventsInterested ?? [],
+            categoriesInterested:newUser?.categoriesInterested ?? []
         }
     })
 

@@ -48,7 +48,6 @@ const getAccessToken = () => {
         reject(err);
         return;
       }
-      console.log("tokens.access_token",tokens.access_token)
       resolve(tokens.access_token);
     });
   });
@@ -122,35 +121,40 @@ const getAll = asyncHandle(async (req, res) => {
   })
 })
 const getnotificationsById = asyncHandle(async (req, res) => {
-  const { idUser,typeFillter,statusFillter,limit } = req.query
-  const filter = {}
-  if(idUser){
-    filter.recipientId = {$eq:idUser}
-  }
-  if(statusFillter){
-    filter.status = {$eq:statusFillter}
-  }
-  if(typeFillter){
-    filter.type = {$eq:typeFillter}
-  }
-  const notifications = await NotificationModel.find(filter).populate({
-    path: 'senderID recipientId',
-  })
-    .populate({
-      path: 'eventId',
-      populate: [
-        { path: 'category' },
-        { path: 'authorId' },
-        { path: 'usersInterested' }
-      ]
-    }).limit(limit ?? 0).sort({ "createdAt": -1 });
-  res.status(200).json({
-    status: 200,
-    message: 'Thành công',
-    data: {
-      notifications
+  const { idUser, typeFillter, statusFillter, limit } = req.query
+  if (idUser) {
+    const filter = {}
+    if (idUser) {
+      filter.recipientId = { $eq: idUser }
     }
-  })
+    if (statusFillter) {
+      filter.status = { $eq: statusFillter }
+    }
+    if (typeFillter) {
+      filter.type = { $eq: typeFillter }
+    }
+    const notifications = await NotificationModel.find(filter).populate({
+      path: 'senderID recipientId',
+    })
+      .populate({
+        path: 'eventId',
+        populate: [
+          { path: 'category' },
+          { path: 'authorId' },
+          { path: 'usersInterested' }
+        ]
+      }).limit(limit ?? 0).sort({ "createdAt": -1 });
+    res.status(200).json({
+      status: 200,
+      message: 'Thành công',
+      data: {
+        notifications
+      }
+    })
+  }else{
+    res.status(401)
+    throw new Error('Người dùng không có')
+  }
 })
 const updateIsViewedNotifications = asyncHandle(async (req, res) => {
   const { uid } = req.body
@@ -187,7 +191,7 @@ const updateStatusNotifications = asyncHandle(async (req, res) => {
         $set: {
           'users.$[x].status': true,
         }
-      },{
+      }, {
         arrayFilters: [
           { "x._id": userFollow.id }
         ]

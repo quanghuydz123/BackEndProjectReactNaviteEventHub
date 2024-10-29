@@ -1,6 +1,9 @@
 const asyncHandle = require('express-async-handler')
 require('dotenv').config()
 const EventModel = require("../models/EventModel")
+const UserModel = require("../models/UserModel")
+const CategoryModel = require("../models/CategoryModel")
+
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
 
 
@@ -27,9 +30,7 @@ const addEvent = asyncHandle(async (req, res) => {
             res.status(200).json({
                 status:200,
                 message: 'Thêm thành công',
-                data: {
-                    users: createEvent
-                }
+                data: createEvent
             })
         }else{
             res.status(400)
@@ -47,9 +48,7 @@ const getAllEvent = asyncHandle(async (req, res) => {
     res.status(200).json({
         status:200,
         message:'Thành công',
-        data:{
-            events:events
-        }
+        data:events
     })
 })
 const getEvents = asyncHandle(async (req, res) => {
@@ -79,7 +78,7 @@ const getEvents = asyncHandle(async (req, res) => {
     const events = await EventModel.find(filter)
     .populate('category', '_id name image')
     .populate('authorId')
-    .populate('usersInterested', '_id fullname email photoUrl')
+    .populate('usersInterested.user', '_id fullname email photoUrl')
     .limit(limit ?? 0).sort({"startAt":1})
     if(lat && long && distance){
         const eventsNearYou = []
@@ -94,17 +93,13 @@ const getEvents = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:{
-                events:eventsNearYou
-            }
+            data:eventsNearYou
         })
     }else{
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:{
-                events:events
-            }
+            data:events
         })
     }
 })
@@ -122,27 +117,22 @@ const getEventById = asyncHandle(async (req, res) => {
     const {eid} = req.query
     const event = await EventModel.findById(eid)
     .populate('category', '_id name image')
-    .populate('usersInterested', '_id fullname email photoUrl')
+    .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate('authorId')
-    console.log("event",event)
     res.status(200).json({
         status:200,
         message:'Thành công',
-        data:{
-            event:event
-        }
+        data:event
     })
 })
 
 const updateEvent = asyncHandle(async (req, res) => {
     const {categories} = req.body
-    const event = await EventModel.updateMany({},{$unset:{'categories':1}})
+    const event = await CategoryModel.updateMany({},{$unset:{'usersInterested':1}})
     res.status(200).json({
         status:200,
         message:'Thành công',
-        data:{
-            event:event
-        }
+        data:event  
     })
 })
 

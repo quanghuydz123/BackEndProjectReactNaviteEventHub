@@ -3,7 +3,7 @@ const followerRouter = express.Router();
 const followController = require('../controller/followController');
 
 
-followerRouter.post('/update-follower-event',followController.updateFollowEvent)
+// followerRouter.post('/update-follower-event',followController.updateFollowEvent)
 followerRouter.get('/get-all',followController.getAllFollow)
 followerRouter.put('/update-follower-category',followController.updateFollowCategory)
 followerRouter.get('/get-byId',followController.getFollowById)
