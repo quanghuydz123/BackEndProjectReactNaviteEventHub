@@ -42,7 +42,7 @@ const addEvent = asyncHandle(async (req, res) => {
     }
 })
 
-const getAllEvent = asyncHandle(async (req, res) => {
+const   getAllEvent = asyncHandle(async (req, res) => {
     const {limit,limitDate} = req.query
     const events = await EventModel.find({date:{$gte:limitDate}}).populate('category users authorId').sort({"startAt":1})
     res.status(200).json({
@@ -55,7 +55,7 @@ const getEvents = asyncHandle(async (req, res) => {
     const {lat,long,distance,limit,limitDate,searchValue,isUpcoming,isPastEvents,categoriesFilter,
         startAt,endAt,minPrice,maxPrice} = req.query
     // console.log("minPrice,maxPrice",minPrice,maxPrice)
-    const filter = {}
+    const filter = {statusEvent: { $nin: ['Cancelled', 'PendingApproval'] }}
     const regex = new RegExp(searchValue ?? '', 'i')//để cho không phân biệt hoa thường
     filter.title = {'$regex': regex}
     // if(categoriesFilter){
@@ -75,20 +75,40 @@ const getEvents = asyncHandle(async (req, res) => {
     } else if (maxPrice) {
         filter.price = { $lte: maxPrice };
     }
+    const currentTime = new Date();
     const events = await EventModel.find(filter)
     .populate('category', '_id name image')
     // .populate('authorId')
     .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate({
         path:'showTimes',
+        options: { sort: { startDate: 1 } } // Sắp xếp theo startDate tăng dần
     })
-    .limit(limit ?? 0).sort({"startAt":1})
-    .select('-description -authorId')
-    
+    .limit(limit ?? 0).select('-description -authorId')
+    // const showTimeCopy = [...events.map((event)=>event.showTimes)]
+    // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
+    // events.showTimes = showTimeCopySort
+    // events.forEach(event => {
+    //     event.showTimes = [...event.showTimes].sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
+    // });
+    events.forEach(event => {//sap xếp các suất diễn đã kết thúc xuống cuối
+        event.showTimes = [
+            ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+            ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+        ];
+    });
+    const sortedStartEvents = events.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+        const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
+        const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
+        return dateA - dateB;
+    });    
+    //bỏ các sự kiện đã kết thúc xuống cuối
+    const sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
+    // console.log(sortedEvents[0].title,sortedEvents[0].showTimes.length)
     if(lat && long && distance){
         const eventsNearYou = []
-        if(events.length > 0 ){
-            events.forEach((event)=>{
+        if(sortedEvents.length > 0 ){
+            sortedEvents.forEach((event)=>{
                 const eventDistance = calsDistanceLocation(lat,long,event.position.lat,event.position.lng)
                 if(eventDistance < distance){
                     eventsNearYou.push(event)
@@ -98,13 +118,17 @@ const getEvents = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:eventsNearYou
+            data:sortedEvents
         })
     }else{
+        // const eventsNew = events.filter(event => event.statusEvent !== 'Ended');
+        // const eventEnded = events.filter(event => event.statusEvent === 'Ended');
+        // const sortedEvents = eventsNew.concat(eventEnded);
+        // console.log("eventEnded",eventEnded)
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:events
+            data:sortedEvents
         })
     }
 })
@@ -130,6 +154,15 @@ const getEventById = asyncHandle(async (req, res) => {
             path:'typeTickets',
         }
     })
+    // const showTimeCopy = event.showTimes
+    // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
+    // event.showTimes=showTimeCopySort
+    // Sao chép mảng `showTimes` và sắp xếp
+    const showTimeCopySort = [
+        ...event.showTimes.filter(showTime => showTime.status !== 'Ended'), 
+        ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+    ];
+    event.showTimes = showTimeCopySort;
     res.status(200).json({
         status:200,
         message:'Thành công',
