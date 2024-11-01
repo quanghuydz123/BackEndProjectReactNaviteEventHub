@@ -42,6 +42,22 @@ const UserSchema = new mongoose.Schema({
             default:Date.now()
         }
     }],
+    viewedEvents:[{
+        event:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'events',
+            require:true
+        },
+        createdAt:{
+            type: Date,
+            default:Date.now()
+        }
+    }],
+    historyTransaction:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'inVoices',
+        require:true
+    }],
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

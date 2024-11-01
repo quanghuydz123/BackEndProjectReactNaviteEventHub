@@ -1,7 +1,7 @@
 const asyncHandle = require('express-async-handler')
 require('dotenv').config()
 const EventModel = require("../models/EventModel")
-const UserModel = require("../models/UserModel")
+const ShowTimeModel = require("../models/ShowTimeModel")
 const CategoryModel = require("../models/CategoryModel")
 
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
@@ -77,9 +77,14 @@ const getEvents = asyncHandle(async (req, res) => {
     }
     const events = await EventModel.find(filter)
     .populate('category', '_id name image')
-    .populate('authorId')
+    // .populate('authorId')
     .populate('usersInterested.user', '_id fullname email photoUrl')
+    .populate({
+        path:'showTimes',
+    })
     .limit(limit ?? 0).sort({"startAt":1})
+    .select('-description -authorId')
+    
     if(lat && long && distance){
         const eventsNearYou = []
         if(events.length > 0 ){
@@ -119,6 +124,12 @@ const getEventById = asyncHandle(async (req, res) => {
     .populate('category', '_id name image')
     .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate('authorId')
+    .populate({
+        path:'showTimes',
+        populate:{
+            path:'typeTickets',
+        }
+    })
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -127,12 +138,12 @@ const getEventById = asyncHandle(async (req, res) => {
 })
 
 const updateEvent = asyncHandle(async (req, res) => {
-    const {categories} = req.body
-    const event = await CategoryModel.updateMany({},{$unset:{'usersInterested':1}})
+    const {idEvent,showTimes} = req.body
+    const event = await EventModel.findByIdAndUpdate(idEvent,{showTimes:showTimes},{new:true})
     res.status(200).json({
         status:200,
         message:'Thành công',
-        data:event  
+        // data:event  
     })
 })
 
@@ -145,6 +156,38 @@ const buyTicket = asyncHandle(async (req, res) => {
         
     })
 })
+const updateStatusEvent = asyncHandle(async (req, res) => {
+    const events = await EventModel.find().select('_id showTimes statusEvent')
+    await Promise.all(events.map(async (event)=>{
+        if(event.statusEvent !== 'PendingApproval' && event.statusEvent !== 'Cancelled'){
+            const showTimes = await ShowTimeModel.find({ _id: { $in: event.showTimes } });
+            const allNotStarted = showTimes.every(showTime => showTime.status === 'NotStarted');
+            const allEnded = showTimes.every(showTime => showTime.status === 'Ended');
+            const allSoldOut = showTimes.every(showTime => showTime.status === 'SoldOut');
+            const anyOngoing = showTimes.some(showTime => showTime.status === 'Ongoing');
+            const anyOnSale = showTimes.some(showTime => showTime.status === 'OnSale');
+            if (allNotStarted) {
+                event.statusEvent = 'NotStarted';
+            } else if (allEnded) {
+                event.statusEvent = 'Ended';
+            } else if (allSoldOut) {
+                event.statusEvent = 'SoldOut';
+            } else if (anyOngoing) {
+                event.statusEvent = 'Ongoing';
+            } else if (anyOnSale) {
+                event.statusEvent = 'OnSale';
+            }
+        
+            await event.save();
+        }
+    }))
+    res.status(200).json({
+        status:200,
+        message:'Thành công',
+        // data:events  
+    })
+})
+
 module.exports = {
     addEvent,
     getAllEvent,
@@ -152,5 +195,6 @@ module.exports = {
     updateFollowerEvent,
     getEventById,
     updateEvent,
-    buyTicket
+    buyTicket,
+    updateStatusEvent
 }

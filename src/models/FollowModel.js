@@ -6,15 +6,6 @@ const FollowSchema = new mongoose.Schema({
         ref: 'users',
         required: true,
     },
-    // events: [{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'events',
-    // }],
-    categories: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Categories',
-    }
-    ],
     users: [{
         idUser: {
             type: mongoose.Schema.Types.ObjectId,

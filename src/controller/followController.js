@@ -59,7 +59,7 @@ const updateFollowEvent = asyncHandle(async (req, res) => {
 const getAllFollow = asyncHandle(async (req, res) => {
     const allFollower = await FollowModel.find()
         .populate({
-            path: 'user categories users.idUser',
+            path: 'user users.idUser',
         })
         // .populate({
         //     path: 'events',
@@ -104,7 +104,7 @@ const getFollowById = asyncHandle(async (req, res) => {
     const { uid } = req.query
     const follower = await FollowModel.find({ user: uid })
         .populate({
-            path: 'user categories users.idUser',
+            path: 'user users.idUser',
         })
         // .populate({
         //     path: 'events',

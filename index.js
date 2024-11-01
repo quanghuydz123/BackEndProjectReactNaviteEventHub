@@ -4,6 +4,8 @@ const cors = require('cors')
 const routes = require('./src/routes')
 const connectDb = require('./src/configs/connectDb')
 const errorMiddleHandle = require('./src/middlewares/errorMiddlewares')
+const jobs = require('./src/jobs/statusUpdater')
+
 require('dotenv').config()
 const http = require("http").Server(app);
 const socketIO = require('socket.io')(http, {
@@ -59,6 +61,7 @@ socketIO.on('connection', (socket) => {
 routes(app)
 
 connectDb.connectDb()
+
 
 app.use(errorMiddleHandle)
 

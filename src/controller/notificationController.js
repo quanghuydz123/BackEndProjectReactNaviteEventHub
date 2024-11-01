@@ -102,15 +102,13 @@ const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => 
 
 const getAll = asyncHandle(async (req, res) => {
   const notifications = await NotificationModel.find().populate({
-    path: 'senderID recipientId',
+    path: 'senderID',
+    select:'_id fullname photoUrl'
   })
+  .populate('recipientId', '_id fullname photoUrl')
     .populate({
       path: 'eventId',
-      populate: [
-        { path: 'category' },
-        { path: 'authorId' },
-        { path: 'usersInterested', select: '_id fullname email photoUrl' }
-      ]
+      select:'_id title'
     });
   res.status(200).json({
     status: 200,
@@ -134,16 +132,22 @@ const getnotificationsById = asyncHandle(async (req, res) => {
       filter.type = { $eq: typeFillter }
     }
     const notifications = await NotificationModel.find(filter).populate({
-      path: 'senderID recipientId',
+      path: 'senderID',
+      select:'_id fullname photoUrl'
     })
-      .populate({
-        path: 'eventId',
-        populate: [
-          { path: 'category' },
-          { path: 'authorId' },
-          { path: 'usersInterested' }
-        ]
-      }).limit(limit ?? 0).sort({ "createdAt": -1 });
+    .populate('recipientId', '_id fullname photoUrl').populate({
+      path: 'eventId',
+      select:'_id title'
+    })
+    .limit(limit ?? 0).sort({ "createdAt": -1 });
+      // .populate({
+      //   path: 'eventId',
+      //   populate: [
+      //     { path: 'category' },
+      //     { path: 'authorId' },
+      //     { path: 'usersInterested' }
+      //   ]
+      // })
     res.status(200).json({
       status: 200,
       message: 'Thành công',

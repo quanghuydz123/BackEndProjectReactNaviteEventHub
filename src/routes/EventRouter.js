@@ -9,5 +9,6 @@ EventRouter.get('/get-events',eventController.getEvents)
 EventRouter.post('/update-followers',eventController.updateFollowerEvent)
 EventRouter.get('/get-event-byId',eventController.getEventById)
 EventRouter.put('/update-event',eventController.updateEvent)
+EventRouter.put('/update-statusEvent',eventController.updateStatusEvent)
 
 module.exports = EventRouter

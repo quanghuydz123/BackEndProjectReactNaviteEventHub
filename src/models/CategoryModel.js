@@ -14,6 +14,10 @@ const CategorySchema = new mongoose.Schema(
             default:Date.now()
         }
     }],
+    keywords:[{
+        type:String,
+        unique:true
+    }]
 },
 {
     timestamps: true

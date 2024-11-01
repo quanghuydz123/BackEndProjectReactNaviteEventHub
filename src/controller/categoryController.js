@@ -13,10 +13,9 @@ const addCategory = asyncHandle(async (req, res) => {
         })
         if(createCategory){
             res.status(200).json({
+                status:200,
                 message:'Thêm thành công',
-                data:{
-                    category:createCategory
-                }
+                data:createCategory
             })
         }
     } else {
@@ -28,11 +27,9 @@ const addCategory = asyncHandle(async (req, res) => {
 const getAll = asyncHandle(async (req, res) => {
    const categories = await CategoryModel.find()
    res.status(200).json({
-    statusCode:200,
+    status:200,
     message:'Thành công',
-    data:{
-        categories:categories
-    }
+    data:categories
 })
 })
 module.exports = {

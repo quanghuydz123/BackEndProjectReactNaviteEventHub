@@ -31,6 +31,25 @@ const EventSchema = new mongoose.Schema({
             default:Date.now()
         }
     }],
+    keywords:[{
+        type:String,
+        unique:true
+    }],
+    showTimes:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'showtimes',
+        require:true
+    }],
+    comments:[{
+        user:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
+            require:true
+        },
+        content:{type:String,require:true},
+        createdAt:{type:Date,default:Date.now()},
+    }],
+    statusEvent:{type:String,enum:['PendingApproval',"NotStarted",'Ongoing','Ended','Cancelled','OnSale','SoldOut'],require:true,default:'PendingApproval'},
     startAt:{type:Date,required:true},
     endAt:{type:Date,required:true},
     status:{type:Boolean,require:true,default:true}
