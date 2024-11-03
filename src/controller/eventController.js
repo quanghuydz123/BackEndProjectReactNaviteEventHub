@@ -44,7 +44,35 @@ const addEvent = asyncHandle(async (req, res) => {
 
 const   getAllEvent = asyncHandle(async (req, res) => {
     const {limit,limitDate} = req.query
-    const events = await EventModel.find({date:{$gte:limitDate}}).populate('category users authorId').sort({"startAt":1})
+    const events = await EventModel.find()
+    .populate({
+        path: 'authorId',
+        populate: [
+            {
+                path: 'user',
+                select: '_id fullname email photoUrl bio'
+            },
+            // {
+            //     path: 'eventCreated',
+            //     select: '-description -authorId',
+            //     populate: [
+            //         {
+            //             path: 'category',
+            //             select: '_id name image'
+            //         },
+            //         {
+            //             path: 'usersInterested.user',
+            //             select: '_id fullname email photoUrl'
+            //         },
+            //         {
+            //             path:'showTimes',
+            //             options: { sort: { startDate: 1 }}
+            //         }
+            //     ]
+            // }
+        ]
+    })
+    .select('authorId')
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -82,6 +110,7 @@ const getEvents = asyncHandle(async (req, res) => {
     .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate({
         path:'showTimes',
+        select:'-typeTickets',
         options: { sort: { startDate: 1 } } // Sắp xếp theo startDate tăng dần
     })
     .limit(limit ?? 0).select('-description -authorId')
@@ -100,6 +129,7 @@ const getEvents = asyncHandle(async (req, res) => {
     const sortedStartEvents = events.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
         const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
         const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
+        //dateB - dateA giảm dần
         return dateA - dateB;
     });    
     //bỏ các sự kiện đã kết thúc xuống cuối
@@ -118,7 +148,7 @@ const getEvents = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:sortedEvents
+            data:eventsNearYou
         })
     }else{
         // const eventsNew = events.filter(event => event.statusEvent !== 'Ended');
@@ -147,7 +177,14 @@ const getEventById = asyncHandle(async (req, res) => {
     const event = await EventModel.findById(eid)
     .populate('category', '_id name image')
     .populate('usersInterested.user', '_id fullname email photoUrl')
-    .populate('authorId')
+    .populate({
+        path: 'authorId',
+        populate: [
+            {
+                path: 'user',
+                select: '_id fullname email photoUrl bio'
+            },
+    ]})
     .populate({
         path:'showTimes',
         populate:{

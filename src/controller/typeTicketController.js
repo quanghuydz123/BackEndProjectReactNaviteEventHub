@@ -24,7 +24,6 @@ const createTypeTicket = asyncHandle(async (req, res) => {
 const updateStatusTypeTicket = asyncHandle(async (req, res) => {
     const typeTickets = await TypeTicketModel.find();
     const currentTime = new Date();
-    console.log("Updating updateStatusTypeTicket...");
     await Promise.all((typeTickets.map(async (typeTicket)=>{
         if (currentTime < typeTicket.startSaleTime) {
             typeTicket.status = 'NotStarted';
