@@ -228,25 +228,34 @@ const buyTicket = asyncHandle(async (req, res) => {
 })
 const updateStatusEvent = asyncHandle(async (req, res) => {
     const events = await EventModel.find().select('_id showTimes statusEvent')
-    await Promise.all(events.map(async (event)=>{
-        if(event.statusEvent !== 'PendingApproval' && event.statusEvent !== 'Cancelled'){
-            const showTimes = await ShowTimeModel.find({ _id: { $in: event.showTimes } });
-            const allNotStarted = showTimes.every(showTime => showTime.status === 'NotStarted');
-            const allEnded = showTimes.every(showTime => showTime.status === 'Ended');
-            const allSoldOut = showTimes.every(showTime => showTime.status === 'SoldOut');
-            const anyOngoing = showTimes.some(showTime => showTime.status === 'Ongoing');
-            const anyOnSale = showTimes.some(showTime => showTime.status === 'OnSale');
-            if (allNotStarted) {
-                event.statusEvent = 'NotStarted';
-            } else if (allEnded) {
-                event.statusEvent = 'Ended';
-            } else if (allSoldOut) {
-                event.statusEvent = 'SoldOut';
-            } else if (anyOngoing) {
-                event.statusEvent = 'Ongoing';
-            } else if (anyOnSale) {
-                event.statusEvent = 'OnSale';
-            }
+    await Promise.all(events.map(async (event) => {
+        if (event.statusEvent !== 'PendingApproval' && event.statusEvent !== 'Cancelled') {
+          const showTimes = await ShowTimeModel.find({ _id: { $in: event.showTimes } });
+          const allNotStarted = showTimes.every(showTime => showTime.status === 'NotStarted');
+          const allEnded = showTimes.every(showTime => showTime.status === 'Ended');
+          const allSoldOut = showTimes.every(showTime => showTime.status === 'SoldOut');
+          const allSaleStopped = showTimes.every(showTime => showTime.status === 'SaleStopped');
+          const allNotYetOnSale = showTimes.every(showTime => showTime.status === 'NotYetOnSale');
+          const anyOngoing = showTimes.some(showTime => showTime.status === 'Ongoing');
+          const anyOnSale = showTimes.some(showTime => showTime.status === 'OnSale');
+          if (allNotStarted) {
+            event.statusEvent = 'NotStarted';
+          } else if (allSoldOut) {
+            event.statusEvent = 'SoldOut';
+          }
+          else if (allSaleStopped) {
+            event.statusEvent = 'SaleStopped'
+          } else if (allNotYetOnSale) {
+            event.statusEvent = 'NotYetOnSale'
+          }
+          else if (allEnded) {
+            event.statusEvent = 'Ended';
+          }
+          else if (anyOngoing) {
+            event.statusEvent = 'Ongoing';
+          } else if (anyOnSale) {
+            event.statusEvent = 'OnSale';
+          }
         
             await event.save();
         }

@@ -49,7 +49,10 @@ const EventSchema = new mongoose.Schema({
         content:{type:String,require:true},
         createdAt:{type:Date,default:Date.now()},
     }],
-    statusEvent:{type:String,enum:['PendingApproval',"NotStarted",'Ongoing','Ended','Cancelled','OnSale','SoldOut'],require:true,default:'PendingApproval'},
+    statusEvent:{type:String,
+        enum:['PendingApproval',"NotStarted",'Ongoing','Ended','Cancelled','OnSale','SoldOut','SaleStopped','NotYetOnSale'],
+        require:true,
+        default:'PendingApproval'},
     startAt:{type:Date,required:true},
     endAt:{type:Date,required:true},
     status:{type:Boolean,require:true,default:true}
