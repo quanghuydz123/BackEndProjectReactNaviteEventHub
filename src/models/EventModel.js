@@ -53,9 +53,9 @@ const EventSchema = new mongoose.Schema({
         enum:['PendingApproval',"NotStarted",'Ongoing','Ended','Cancelled','OnSale','SoldOut','SaleStopped','NotYetOnSale'],
         require:true,
         default:'PendingApproval'},
-    startAt:{type:Date,required:true},
-    endAt:{type:Date,required:true},
-    status:{type:Boolean,require:true,default:true}
+    startAt:{type:Date},
+    endAt:{type:Date},
+    // status:{type:Boolean,require:true,default:true}
 },
 {
     timestamps: true

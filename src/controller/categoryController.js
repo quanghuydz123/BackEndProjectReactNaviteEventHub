@@ -6,7 +6,7 @@ const CategoryModel = require("../models/CategoryModel")
 
 const addCategory = asyncHandle(async (req, res) => {
     const { name,image } = req.body
-    if (req.body) {
+    if (name && image) {
         const createCategory = await CategoryModel.create({
             name,
             image

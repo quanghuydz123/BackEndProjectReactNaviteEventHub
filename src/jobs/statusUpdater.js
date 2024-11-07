@@ -102,7 +102,7 @@ const updateStatusEvent = asyncHandle(async () => {
 
 })
 
-cron.schedule('*//10 * * * *', async () => {
+cron.schedule('*/10 * * * *', async () => {
   console.log("Updating statuses...");
   await updateStatusTypeTicket();
   await updateStatusShowTime();

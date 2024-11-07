@@ -3,6 +3,9 @@ require('dotenv').config()
 const EventModel = require("../models/EventModel")
 const ShowTimeModel = require("../models/ShowTimeModel")
 const CategoryModel = require("../models/CategoryModel")
+const TypeTicketModel = require("../models/TypeTicketModel")
+const OrganizerModel = require("../models/OrganizerModel")
+const {mongoose } = require('mongoose');
 
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
 
@@ -110,10 +113,14 @@ const getEvents = asyncHandle(async (req, res) => {
     .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate({
         path:'showTimes',
-        select:'-typeTickets',
-        options: { sort: { startDate: 1 } } // Sắp xếp theo startDate tăng dần
+        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+        populate:{
+            path:'typeTickets',
+            select:'price'
+        },
     })
-    .limit(limit ?? 0).select('-description -authorId')
+    .limit(limit ?? 0)
+    .select('-description -authorId')
     // const showTimeCopy = [...events.map((event)=>event.showTimes)]
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // events.showTimes = showTimeCopySort
@@ -256,8 +263,7 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
           } else if (anyOnSale) {
             event.statusEvent = 'OnSale';
           }
-        
-            await event.save();
+          await event.save();
         }
     }))
     res.status(200).json({
@@ -267,6 +273,123 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
     })
 })
 
+const createEvent = asyncHandle(async (req, res) => {
+    const {showTimes,event} = req.body
+    const session = await mongoose.startSession(); // Bắt đầu session cho transaction
+    try {
+        await session.startTransaction(); // Bắt đầu transaction
+        const organizer = await OrganizerModel.findById(event.authorId).session(session)
+        if(!organizer){
+            res.status(400);
+            throw new Error("organizer không tồn tại");
+        }
+       
+        await Promise.all(showTimes.map(async (showTime,index) => {
+            const showTimeSort = await showTime.typeTickets.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+                const priceA = a.price ? a.price : 0;
+                const priceB = b.price ? b.price : 0;
+                //priceB - priceA giảm dần
+                return priceB - priceA;
+            });
+            showTimes[index].typeTickets = showTimeSort
+        }))
+        const sortedShowTime = showTimes.sort((a, b) => {
+            const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+            const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+            return dateA - dateB;
+        });
+        const currentTime = new Date();
+        let idShowtimes = []
+        let statusShowTime = []
+        for (const showtime of sortedShowTime) {
+            let idTypeTicket = [];
+            let statusTypeTicket = [];
+        
+            for (const typeTicket of showtime.typeTickets) {
+                const startSaleTime = new Date(typeTicket.startSaleTime);
+                const endSaleTime = new Date(typeTicket.endSaleTime);
+        
+                if (currentTime.getTime() < startSaleTime.getTime()) {
+                    typeTicket.status = 'NotStarted';
+                } else if (currentTime.getTime() >= startSaleTime.getTime() && currentTime.getTime() <= endSaleTime.getTime()) {
+                    typeTicket.status = 'OnSale';
+                }
+        
+                const typeTicketCreate = new TypeTicketModel(typeTicket);
+                const savedTicket = await typeTicketCreate.save({ session });
+        
+                if (savedTicket) {
+                    idTypeTicket.push(savedTicket._id);
+                    statusTypeTicket.push(savedTicket.status);
+                } else {
+                    res.status(400);
+                    throw new Error("Lỗi khi thêm typeTicket");
+                }
+            }
+        
+            const startDate = new Date(showtime.startDate);
+            if (currentTime.getTime() < startDate.getTime()) {
+                showtime.status = 'NotStarted';
+            }
+        
+            const allNotYetOnSale = statusTypeTicket.every(status => status === 'NotStarted');
+            const anyOnSale = statusTypeTicket.some(status => status === 'OnSale');
+        
+            if (allNotYetOnSale) {
+                showtime.status = 'NotYetOnSale';
+            } else if (anyOnSale) {
+                showtime.status = 'OnSale';
+            }
+        
+            const showTimeCreate = new ShowTimeModel({ ...showtime, typeTickets: idTypeTicket });
+            const savedShowTime = await showTimeCreate.save({ session });
+        
+            if (savedShowTime) {
+                idShowtimes.push(savedShowTime._id);
+                statusShowTime.push(savedShowTime.status);
+            } else {
+                res.status(400);
+                throw new Error("Lỗi khi thêm showTime");
+            }
+        }
+        const allNotStarted = statusShowTime.every(status => status === 'NotStarted');
+        const allNotYetOnSale = statusShowTime.every(status => status === 'NotYetOnSale');
+        const anyOnSale = statusShowTime.some(status => status === 'OnSale');
+        if (allNotStarted) {
+            event.statusEvent = 'NotStarted';
+        }else if (allNotYetOnSale) {
+            event.statusEvent = 'NotYetOnSale'
+        }
+        else if (anyOnSale) {
+            event.statusEvent = 'OnSale';
+        }
+        const eventCreate = new EventModel({...event,showTimes:idShowtimes})
+        const savedEvent = await eventCreate.save({session})
+        if(savedEvent){
+            const eventCreated = [...organizer.eventCreated]
+            eventCreated.push(savedEvent._id)
+            await OrganizerModel.findByIdAndUpdate(organizer._id,{eventCreated:eventCreated},{new:true})
+            await session.commitTransaction(); // Commit transaction nếu tất cả đều thành công
+            res.status(200).json({
+                status:200,
+                message:'Thành công',
+                data:savedEvent  
+            })
+        }else{
+            res.status(400);
+            throw new Error("Lỗi khi thêm Event");
+        }
+    } catch (error) {
+        await session.abortTransaction(); // Rollback transaction nếu có lỗi
+        console.error(error);
+        res.status(400).json({
+            status: 400,
+            message: error.message,
+        });
+    }finally {
+        session.endSession(); // Kết thúc session
+    }
+})
 module.exports = {
     addEvent,
     getAllEvent,
@@ -275,5 +398,6 @@ module.exports = {
     getEventById,
     updateEvent,
     buyTicket,
-    updateStatusEvent
+    updateStatusEvent,
+    createEvent
 }
