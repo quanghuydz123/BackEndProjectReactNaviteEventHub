@@ -118,7 +118,6 @@ const getFollowById = asyncHandle(async (req, res) => {
         users: {
             $elemMatch: {
                 idUser: uid,
-                status: true
             }
         }
     }).countDocuments();
@@ -126,7 +125,6 @@ const getFollowById = asyncHandle(async (req, res) => {
         users: {
             $elemMatch: {
                 idUser: uid,
-                status: true
             }
         }
     }).populate('user users.idUser');
@@ -151,10 +149,10 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
         let users = [...followerUser.users]
         const index = users.findIndex(item => item.idUser.toString() === idUserOther.toString())
         if (index != -1) {
-            const idNotification = users.find((item) => item.idUser.toString() === idUserOther.toString()).idNotification
+            // const idNotification = users.find((item) => item.idUser.toString() === idUserOther.toString()).idNotification
             users.splice(index, 1)
             const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
-            await NotificationModel.findByIdAndUpdate(idNotification, { status: 'cancelled' }, { new: true })
+            // await NotificationModel.findByIdAndUpdate(idNotification, { status: 'cancelled' }, { new: true })
             res.status(200).json({
                 status: 200,
                 message: 'cập nhập followUserOther thành công',
@@ -173,7 +171,8 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                 status: 'unanswered',
                 isRead: false
             })
-            users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true })
+            // users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true })
+            users.push({ idUser: idUserOther})
             const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
             const user = await UserModel.findById(idUser)
             const userOther = await UserModel.findById(idUserOther)
@@ -212,7 +211,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             status: 'unanswered',
             isRead: false
         })
-        users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true})
+        users.push({ idUser: idUserOther})
         const createfollowUserOther = await FollowModel.create({
             user: idUser,
             users: users

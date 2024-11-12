@@ -53,19 +53,56 @@ const login = asyncHandle(async (req,res)=>{
     const existingUser = await UserModel.findOne({email}).populate('idRole').populate({
         path: 'categoriesInterested.category',
         select: '_id name image'
-    }).select('-categoriesInterested.createdAt -categoriesInterested._id');
+    })
+    .populate({
+        path: 'viewedEvents.event',
+        select:'-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord',
+        populate:[{
+            path:'category',
+            select:'_id name image',
+
+        },
+        {
+            path:'usersInterested.user',
+            select:'_id fullname email photoUrl',
+        },
+        {
+            path:'showTimes',
+            options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+            populate:{
+                path:'typeTickets',
+                select:'price',
+                options: { sort: { price: -1 } }, // Sắp xếp thei
+            }
+        }
+    ]
+    })
+    .select('-categoriesInterested.createdAt -categoriesInterested._id -viewedEvents.createdAt -viewedEvents._id -createdAt -updatedAt');
     if(!existingUser){
         res.status(200).json({  
             message:"Email chưa được đăng ký!!!",
             statusCode:'ERR',
         })
     }
-    const isMathPassword = bcrypt.compare(password,existingUser.password)
+     
+    // console.log("sortedStartEvents",sortedStartEvents)
+    const isMathPassword = await bcrypt.compare(password,existingUser.password)
     if(!isMathPassword){
         res.status(403)//ngăn không cho xuống dưới
         throw new Error('Email hoặc mật khẩu không chỉnh xác!!!')
     }
-    console.log("existingUser.idRole",existingUser.idRole)
+    existingUser?.viewedEvents.forEach(item => {//sap xếp các suất diễn đã kết thúc xuống cuối
+        item.event.showTimes = [
+            ...item.event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+            ...item.event.showTimes.filter(showTime => showTime.status === 'Ended')
+        ];
+    });
+    // const sortedStartEvents = existingUser?.viewedEvents.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+    //     const dateA = a.event.showTimes[0]?.startDate ? new Date(a.event.showTimes[0].startDate) : new Date(0);
+    //     const dateB = b.event.showTimes[0]?.startDate ? new Date(b.event.showTimes[0].startDate) : new Date(0);
+    //     //dateB - dateA giảm dần
+    //     return dateA - dateB;
+    // }); 
     res.status(200).json({
         message:"Đăng nhập thành công",
         statusCode:200,
@@ -80,7 +117,8 @@ const login = asyncHandle(async (req,res)=>{
             role:existingUser.idRole,
             bio:existingUser.bio,
             eventsInterested:existingUser.eventsInterested ?? [],
-            categoriesInterested:existingUser?.categoriesInterested ?? []
+            categoriesInterested:existingUser?.categoriesInterested ?? [],
+            viewedEvents:existingUser.viewedEvents
         }
     })
 })
@@ -90,8 +128,44 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
    const existingUser = await UserModel.findOne({email:userInfo.email}).populate('idRole').populate({
     path: 'categoriesInterested.category',
     select: '_id name image'
-    }).select('-categoriesInterested.createdAt -categoriesInterested._id');
+    })
+    .populate({
+        path: 'viewedEvents.event',
+        select:'-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord',
+        populate:[{
+            path:'category',
+            select:'_id name image',
+
+        },
+        {
+            path:'usersInterested.user',
+            select:'_id fullname email photoUrl',
+        },
+        {
+            path:'showTimes',
+            options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+            populate:{
+                path:'typeTickets',
+                select:'price',
+                options: { sort: { price: -1 } }, // Sắp xếp thei
+            }
+        }
+    ]
+    })
+    .select('-categoriesInterested.createdAt -categoriesInterested._id -viewedEvents.createdAt -viewedEvents._id -createdAt -updatedAt');
    if(existingUser){
+    existingUser?.viewedEvents.forEach(item => {//sap xếp các suất diễn đã kết thúc xuống cuối
+        item.event.showTimes = [
+            ...item.event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+            ...item.event.showTimes.filter(showTime => showTime.status === 'Ended')
+        ];
+    });
+    // const sortedStartEvents = existingUser?.viewedEvents.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+    //     const dateA = a.event.showTimes[0]?.startDate ? new Date(a.event.showTimes[0].startDate) : new Date(0);
+    //     const dateB = b.event.showTimes[0]?.startDate ? new Date(b.event.showTimes[0].startDate) : new Date(0);
+    //     //dateB - dateA giảm dần
+    //     return dateA - dateB;
+    // }); 
     res.status(200).json({
         message:"Đăng nhập thành công",
         status:200,
@@ -106,7 +180,9 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             role:existingUser?.idRole,
             bio:existingUser.bio,
             eventsInterested:existingUser.eventsInterested ?? [],
-            categoriesInterested:existingUser?.categoriesInterested ?? []
+            categoriesInterested:existingUser?.categoriesInterested ?? [],
+            viewedEvents:existingUser.viewedEvents
+
 
         }
     })
@@ -132,7 +208,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             role:newUser?.idRole,
             bio:newUser.bio,
             eventsInterested:newUser.eventsInterested ?? [],
-            categoriesInterested:newUser?.categoriesInterested ?? []
+            categoriesInterested:newUser?.categoriesInterested ?? [],
+            viewedEvents:[]
         }
     })
 

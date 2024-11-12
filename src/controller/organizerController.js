@@ -2,8 +2,13 @@ const asyncHandle = require('express-async-handler')
 const OrganizerModel = require("../models/OrganizerModel")
 
 const getAll = asyncHandle(async (req, res) => {
-    res.status(400)//ngăn không cho xuống dưới
-    throw new Error('Email hoặc mật khẩu không chỉnh xác!!!')
+    const organizers = await OrganizerModel.find()
+
+     res.status(200).json({
+            status:200,
+            message:'Thêm thành công',
+            data:organizers
+        })
 })
 
 
@@ -56,8 +61,11 @@ const getEventCreatedOrganizerById = asyncHandle(async (req, res) => {
         },
         {
             path:'showTimes',
-            select:'-typeTickets',
-            options: { sort: { startDate: 1 } } // Sắp xếp theo startDate tăng dần
+            options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+            populate:{
+                path:'typeTickets',
+                select:'price'
+            },
         }
             
         ]

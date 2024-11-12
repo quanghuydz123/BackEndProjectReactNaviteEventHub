@@ -11,15 +11,6 @@ const FollowSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
         },
-        status: {
-            type: Boolean,
-            required: true,
-            default: false
-        },
-        idNotification: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'notifications',
-        }
     }
     ]
 

@@ -8,6 +8,7 @@ const OrganizerModel = require("../models/OrganizerModel")
 const {mongoose } = require('mongoose');
 
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
+const UserModel = require('../models/UserModel')
 
 
 const addEvent = asyncHandle(async (req, res) => {
@@ -106,7 +107,7 @@ const getEvents = asyncHandle(async (req, res) => {
     } else if (maxPrice) {
         filter.price = { $lte: maxPrice };
     }
-    const currentTime = new Date();
+    // const currentTime = new Date();
     const events = await EventModel.find(filter)
     .populate('category', '_id name image')
     // .populate('authorId')
@@ -116,11 +117,12 @@ const getEvents = asyncHandle(async (req, res) => {
         options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
         populate:{
             path:'typeTickets',
-            select:'price'
+            select:'price',
+            options: { sort: { price: -1 } }, // Sắp xếp the
         },
     })
-    .limit(limit ?? 0)
-    .select('-description -authorId')
+    // .limit(limit ?? 0)
+    .select('-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord')
     // const showTimeCopy = [...events.map((event)=>event.showTimes)]
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // events.showTimes = showTimeCopySort
@@ -155,7 +157,7 @@ const getEvents = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:eventsNearYou
+            data:eventsNearYou.slice(0,limit)
         })
     }else{
         // const eventsNew = events.filter(event => event.statusEvent !== 'Ended');
@@ -165,7 +167,7 @@ const getEvents = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thành công',
-            data:sortedEvents
+            data:sortedEvents.slice(0,limit)
         })
     }
 })
@@ -194,10 +196,12 @@ const getEventById = asyncHandle(async (req, res) => {
     ]})
     .populate({
         path:'showTimes',
+        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
         populate:{
             path:'typeTickets',
+            options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
         }
-    })
+    }).select('-createdAt -updatedAt -uniqueViewCount -uniqueViewRecord -viewRecord -viewCount')
     // const showTimeCopy = event.showTimes
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // event.showTimes=showTimeCopySort
@@ -274,34 +278,40 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
 })
 
 const createEvent = asyncHandle(async (req, res) => {
-    const {showTimes,event} = req.body
+    const {showTimes, event, idUser} = req.body
     const session = await mongoose.startSession(); // Bắt đầu session cho transaction
     try {
         await session.startTransaction(); // Bắt đầu transaction
-        const organizer = await OrganizerModel.findById(event.authorId).session(session)
-        if(!organizer){
-            res.status(400);
-            throw new Error("organizer không tồn tại");
-        }
        
-        await Promise.all(showTimes.map(async (showTime,index) => {
-            const showTimeSort = await showTime.typeTickets.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
-                const priceA = a.price ? a.price : 0;
-                const priceB = b.price ? b.price : 0;
-                //priceB - priceA giảm dần
-                return priceB - priceA;
-            });
-            showTimes[index].typeTickets = showTimeSort
-        }))
-        const sortedShowTime = showTimes.sort((a, b) => {
-            const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
-            const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
-            return dateA - dateB;
-        });
+        let organizer = await OrganizerModel.findOne({user:idUser}).session(session)
+        if(!organizer){
+            // Nếu không có organizer, tạo mới và lưu vào DB
+            // await UserModel.findByIdAndUpdate(idUser, { idRole: '66c523fa77cc482c91fcaa63' }, { session ,new:true})
+            const newOrganizers = await OrganizerModel.create([{
+                user: idUser,
+                eventCreated: []
+            }], { session });   
+            organizer = newOrganizers[0]; // Lấy phần tử đầu tiên của mảng để có được đối tượng organizer
+        }
+        // await Promise.all(showTimes.map(async (showTime,index) => {
+        //     const showTimeSort = await showTime.typeTickets.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+        //         const priceA = a.price ? a.price : 0;
+        //         const priceB = b.price ? b.price : 0;
+        //         //priceB - priceA giảm dần
+        //         return priceB - priceA;
+        //     });
+        //     showTimes[index].typeTickets = showTimeSort
+        // }))
+        // const sortedShowTime = showTimes.sort((a, b) => {
+        //     const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+        //     const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+        //     return dateA - dateB;
+        // });
+
         const currentTime = new Date();
         let idShowtimes = []
         let statusShowTime = []
-        for (const showtime of sortedShowTime) {
+        for (const showtime of showTimes) {
             let idTypeTicket = [];
             let statusTypeTicket = [];
         
@@ -363,12 +373,15 @@ const createEvent = asyncHandle(async (req, res) => {
         else if (anyOnSale) {
             event.statusEvent = 'OnSale';
         }
+        event.authorId = organizer._id
         const eventCreate = new EventModel({...event,showTimes:idShowtimes})
         const savedEvent = await eventCreate.save({session})
+      
         if(savedEvent){
+            await UserModel.findByIdAndUpdate(idUser, { idRole: '66c523fa77cc482c91fcaa63' }, { session });// cập nhập quyền user là người tổ chức
             const eventCreated = [...organizer.eventCreated]
             eventCreated.push(savedEvent._id)
-            await OrganizerModel.findByIdAndUpdate(organizer._id,{eventCreated:eventCreated},{new:true})
+            await OrganizerModel.findByIdAndUpdate(organizer._id,{eventCreated:eventCreated},{session})
             await session.commitTransaction(); // Commit transaction nếu tất cả đều thành công
             res.status(200).json({
                 status:200,
@@ -390,6 +403,95 @@ const createEvent = asyncHandle(async (req, res) => {
         session.endSession(); // Kết thúc session
     }
 })
+
+const incViewEvent = asyncHandle(async (req, res) => {
+    const {idUser,idEvent} = req.body
+    console.log("idUser,idEvent",idUser,idEvent)
+    const event = await EventModel.findById(idEvent)
+    .populate('category', '_id name image')
+    // .populate('authorId')
+    .populate('usersInterested.user', '_id fullname email photoUrl')
+    .populate({
+        path:'showTimes',
+        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+        populate:{
+            path:'typeTickets',
+            select:'price',
+            options: { sort: { price: -1 } }, // Sắp xếp the
+        },
+    })
+    // .limit(limit ?? 0)
+    .select('-description -authorId')
+    if(!event){
+        res.status(400);
+        throw new Error("Event không tồn tại");
+    }
+    if(idUser){
+        const user = await UserModel.findById(idUser).select('_id viewedEvents')
+        if(!user){
+            res.status(400);
+            throw new Error("User không tồn tại");
+        }
+        const viewedEvents = [...user.viewedEvents]
+        const index = viewedEvents.findIndex((item) => item.event.toString() === idEvent);
+        if (index !== -1) {
+            viewedEvents.splice(index, 1); 
+        }
+        viewedEvents.unshift({event:idEvent,createdAt:Date.now()}); 
+        await UserModel.findByIdAndUpdate(idUser, { viewedEvents: viewedEvents }, { new: true });
+
+        const uniqueViewRecord = [...event.uniqueViewRecord]
+        const currentTime = Date.now();
+        const recordIndex = uniqueViewRecord.findIndex((record) => record.user.toString() === idUser);
+        if (recordIndex === -1) {
+            // Người dùng chưa tồn tại hoặc đã qua 24 giờ kể từ lần ghi nhận trước
+            // if (recordIndex !== -1) {
+            //     // Cập nhật thời gian nếu đã qua 24 giờ
+            //     uniqueViewRecord[recordIndex].createdAt = currentTime;
+            // } else {
+            //     // Thêm bản ghi mới nếu chưa tồn tại
+            //     uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
+            // }
+            uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+            // Tăng uniqueViewCount
+            event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+        }else{
+            if(currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000){
+                uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+                // Tăng uniqueViewCount
+                event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            }
+        }
+        const viewRecord = [...event.viewRecord]
+        viewRecord.unshift({ user: idUser, createdAt: currentTime });
+
+        event.showTimes = [
+            ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+            ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+        ];
+        const sortedShowTimes = event?.showTimes?.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+            const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+            const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+            //dateB - dateA giảm dần
+            return dateA - dateB;
+        }); 
+        event.showTimes = sortedShowTimes
+        await EventModel.findByIdAndUpdate(idEvent, { uniqueViewRecord: uniqueViewRecord, uniqueViewCount: event.uniqueViewCount,$inc:{viewCount:1},viewRecord:viewRecord }, { new: true });
+        res.status(200).json({      
+            status:200,
+            message:'inc view thành công',  
+            data:event
+        })
+    }else{
+        await EventModel.findByIdAndUpdate(idEvent,{$inc:{viewCount:1}},{new:true})
+        res.status(200).json({
+            status:200,
+            message:'inc view thành công',
+            data:null  
+        })
+    }
+   
+})
 module.exports = {
     addEvent,
     getAllEvent,
@@ -399,5 +501,6 @@ module.exports = {
     updateEvent,
     buyTicket,
     updateStatusEvent,
-    createEvent
+    createEvent,
+    incViewEvent
 }

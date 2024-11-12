@@ -11,5 +11,9 @@ EventRouter.get('/get-event-byId',eventController.getEventById)
 EventRouter.put('/update-event',eventController.updateEvent)
 EventRouter.put('/update-statusEvent',eventController.updateStatusEvent)
 EventRouter.post('/create-event',eventController.createEvent)
+EventRouter.put('/incView-event',eventController.incViewEvent)
 
 module.exports = EventRouter
+
+
+
