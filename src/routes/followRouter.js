@@ -8,5 +8,6 @@ followerRouter.get('/get-all',followController.getAllFollow)
 followerRouter.put('/update-follower-category',followController.updateFollowCategory)
 followerRouter.get('/get-byId',followController.getFollowById)
 followerRouter.put('/update-follower-userOther',followController.updateFollowUserOther)
+followerRouter.get('/get-number-follow',followController.getNumberFollow)
 
 module.exports = followerRouter

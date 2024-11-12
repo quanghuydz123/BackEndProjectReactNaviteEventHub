@@ -58,6 +58,8 @@ const UserSchema = new mongoose.Schema({
         ref: 'inVoices',
         require:true
     }],
+    numberOfFollowing:{type:Number,default:0},
+    numberOfFollowers:{type:Number,default:0},
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

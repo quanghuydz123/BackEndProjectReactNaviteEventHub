@@ -118,7 +118,9 @@ const login = asyncHandle(async (req,res)=>{
             bio:existingUser.bio,
             eventsInterested:existingUser.eventsInterested ?? [],
             categoriesInterested:existingUser?.categoriesInterested ?? [],
-            viewedEvents:existingUser.viewedEvents
+            viewedEvents:existingUser.viewedEvents,
+            numberOfFollowers:existingUser.numberOfFollowers,
+            numberOfFollowing:existingUser.numberOfFollowing
         }
     })
 })
@@ -181,7 +183,9 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             bio:existingUser.bio,
             eventsInterested:existingUser.eventsInterested ?? [],
             categoriesInterested:existingUser?.categoriesInterested ?? [],
-            viewedEvents:existingUser.viewedEvents
+            viewedEvents:existingUser.viewedEvents,
+            numberOfFollowers:existingUser.numberOfFollowers,
+            numberOfFollowing:existingUser.numberOfFollowing
 
 
         }
@@ -209,7 +213,9 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             bio:newUser.bio,
             eventsInterested:newUser.eventsInterested ?? [],
             categoriesInterested:newUser?.categoriesInterested ?? [],
-            viewedEvents:[]
+            viewedEvents:[],
+            numberOfFollowers:0,
+            numberOfFollowing:0
         }
     })
 

@@ -2,7 +2,19 @@ const asyncHandle = require('express-async-handler')
 const OrganizerModel = require("../models/OrganizerModel")
 
 const getAll = asyncHandle(async (req, res) => {
-    const organizers = await OrganizerModel.find()
+    const organizers = await OrganizerModel.find().select('-eventCreated -createdAt -updatedAt')
+    .populate(
+       {
+         path:'user',
+         select:'_id fullname email photoUrl bio numberOfFollowing numberOfFollowers',
+       }
+    )
+    organizers.sort((a, b) => {
+        const aa = a.user.numberOfFollowers ?? 0
+        const bb = b.user.numberOfFollowers ?? 0
+        return bb - aa
+    });
+
 
      res.status(200).json({
             status:200,

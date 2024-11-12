@@ -152,6 +152,8 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             // const idNotification = users.find((item) => item.idUser.toString() === idUserOther.toString()).idNotification
             users.splice(index, 1)
             const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
+            await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:-1}})
+            await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:-1}})
             // await NotificationModel.findByIdAndUpdate(idNotification, { status: 'cancelled' }, { new: true })
             res.status(200).json({
                 status: 200,
@@ -163,7 +165,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             })
         } else {
 
-            const createNotification = await NotificationModel.create({
+            await NotificationModel.create({
                 senderID: idUser,
                 recipientId: idUserOther,
                 type: 'allowFollow',
@@ -174,6 +176,8 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             // users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true })
             users.push({ idUser: idUserOther})
             const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
+            await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:1}})
+            await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:1}})
             const user = await UserModel.findById(idUser)
             const userOther = await UserModel.findById(idUserOther)
             const fcmTokens = userOther.fcmTokens
@@ -203,7 +207,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
 
     } else {
         const users = []
-        const createNotification = await NotificationModel.create({
+        = await NotificationModel.create({
             senderID: idUser,
             recipientId: idUserOther,
             type: 'follow',
@@ -216,6 +220,8 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             user: idUser,
             users: users
         })
+        await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:1}})
+        await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:1}})
         const user = await UserModel.findById(idUser)
         const userOther = await UserModel.findById(idUserOther)
         const fcmTokens = userOther.fcmTokens
@@ -245,11 +251,34 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
 
 })
 
+
+const getNumberFollow = asyncHandle(async (req, res) => {
+    const allFollower = await FollowModel.find()
+    Promise.all((allFollower.map(async (item)=>{
+        const follow = await FollowModel.findOne({user:item.user})
+        const numberOfFollowers = await FollowModel.find({
+            users: {
+                $elemMatch: {
+                    idUser: item.user,
+                }
+            }
+        }).countDocuments();
+        const numberOfFollowing = follow.users.length
+        const userUpdate = await UserModel.findByIdAndUpdate(item.user,{numberOfFollowing:numberOfFollowing,numberOfFollowers:numberOfFollowers})
+        console.log("numberOfFollowers",item.user,numberOfFollowers,numberOfFollowing)
+    })))
+    res.status(200).json({
+        status: 200,
+        message: 'Lấy allFollower thành công',
+        data: allFollower})
+    })
+
 module.exports = {
     updateFollowEvent,
     getAllFollow,
     updateFollowCategory,
     getFollowById,
     updateFollowUserOther,
+    getNumberFollow
 
 }
