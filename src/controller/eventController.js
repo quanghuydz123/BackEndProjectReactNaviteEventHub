@@ -419,13 +419,15 @@ const incViewEvent = asyncHandle(async (req, res) => {
             select:'price',
             options: { sort: { price: -1 } }, // Sắp xếp the
         },
-    })
-    // .limit(limit ?? 0)
-    .select('-description -authorId')
+    }).select('-description -authorId')
+    
     if(!event){
         res.status(400);
         throw new Error("Event không tồn tại");
     }
+    
+    // .limit(limit ?? 0)
+    
     if(idUser){
         const user = await UserModel.findById(idUser).select('_id viewedEvents')
         if(!user){

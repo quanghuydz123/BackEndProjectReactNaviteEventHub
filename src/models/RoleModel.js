@@ -1,8 +1,8 @@
 const mongoose =  require('mongoose')
 const RoleSchema = new mongoose.Schema(
 {
-    key:{type:String,require:true},
-    name:{type:String,require:true},
+    key:{type:String,required:true},
+    name:{type:String,required:true},
 },
 {
     timestamps: true

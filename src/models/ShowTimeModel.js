@@ -1,12 +1,12 @@
 const mongoose =  require('mongoose')
 const ShowTimeSchema = new mongoose.Schema(
 {
-    startDate:{type:Date,require:true},
-    endDate:{type:Date,require:true},
+    startDate:{type:Date,required:true},
+    endDate:{type:Date,required:true},
     typeTickets:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'typetickets',
-        require:true        
+        required:true        
     }],
     status:{type:String,enum:['NotStarted','Ongoing','Ended','SoldOut','OnSale','SaleStopped','NotYetOnSale']}
 },

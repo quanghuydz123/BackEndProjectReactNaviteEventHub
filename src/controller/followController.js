@@ -158,9 +158,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             res.status(200).json({
                 status: 200,
                 message: 'cập nhập followUserOther thành công',
-                data: {
-                    followers: updateFollowUserOther
-                }
+                data: null
 
             })
         } else {
@@ -189,7 +187,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                         subtitle: '',
                         body: `${user.fullname} vừa mới dõi bạn theo dõi`,
                         data: {
-
+                            type:'following'
                         }
                     }))
                 )
@@ -198,20 +196,18 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             res.status(200).json({
                 status: 200,
                 message: 'cập nhập followerEvent thành công',
-                data: {
-                    followers: updateFollowUserOther
-                }
+                data: null
 
             })
         }
 
     } else {
         const users = []
-        = await NotificationModel.create({
+        await NotificationModel.create({
             senderID: idUser,
             recipientId: idUserOther,
-            type: 'follow',
-            content: `muốn theo dõi bạn !!!`,
+            type: 'allowFollow',
+            content: `vừa mới theo dõi bạn !!!`,
             status: 'unanswered',
             isRead: false
         })
@@ -231,7 +227,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                     fcmToken: fcmToken,
                     title: 'Thông báo',
                     subtitle: '',
-                    body: `${user.fullname} muốn theo dõi bạn theo dõi`,
+                    body: `${user.fullname} đã dõi bạn theo dõi`,
                     data: {
 
                     }
@@ -242,9 +238,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
         res.status(200).json({
             status: 200,
             message: 'thêm mới followUserOther thành công',
-            data: {
-                followers: createfollowUserOther
-            }
+            data: null
 
         })
     }

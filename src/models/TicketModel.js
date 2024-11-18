@@ -1,13 +1,14 @@
 const mongoose =  require('mongoose')
 const TicketSchema = new mongoose.Schema(
 {
-    seatNumber:{type:Number},
-    price:{type:Number},
+    price:{type:Number,required:true,default:0},
+    isCheckIn:{type:Boolean,required: true,default:false},
+    qrCode:{type:String,required:true,unique:true},
     typeTicket:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'typetickets',
         required: true,
-    },
+    },  
     showTime:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'showtimes',
@@ -23,11 +24,14 @@ const TicketSchema = new mongoose.Schema(
         ref: 'invoices',
         required: true,
     },
-    user:{
+    current_owner:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true,
     },
+    seatNumber:{type:Number},
+    status:{type:String,enum:['Success','Canceled']}
+
 },
 {
     timestamps: true

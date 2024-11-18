@@ -1,13 +1,13 @@
 const mongoose =  require('mongoose')
 const TypeTicketSchema = new mongoose.Schema(
 {
-    name:{type:String,require:true},
+    name:{type:String,required:true},
     description:{type:String},
-    type:{type:String,enum:['Free','Paid'],require:true,default:'Paid'},
+    type:{type:String,enum:['Free','Paid'],required:true,default:'Paid'},
     amount:{type:Number},
     price:{type:Number,min:0},
-    startSaleTime:{type:Date,require:true},
-    endSaleTime:{type:Date,require:true},
+    startSaleTime:{type:Date,required:true},
+    endSaleTime:{type:Date,required:true},
     status:{type:String,enum:['NotStarted','OnSale',"Ended","SoldOut"]},
     promotion:{
         type: mongoose.Schema.Types.ObjectId,

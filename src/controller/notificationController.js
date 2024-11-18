@@ -69,7 +69,8 @@ const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => 
           subtitle: '',
           body: `Bạn được mời tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
           data: {
-            id: eventId
+            id: eventId,
+            type:'InviteUserToEvent'
           }
         });
       }));

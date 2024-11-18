@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const EmailService = require('../service/EmailService')
 require('dotenv').config()
 const RoleModel = require("../models/RoleModel")
+const FollowModel = require("../models/FollowModel")
 
 //asyncHandle có xử lý đến fontend
 const getJsonWebToken = async (email,id,key,name) => {
@@ -50,6 +51,7 @@ const register = asyncHandle( async (req, res) => {
 })
 const login = asyncHandle(async (req,res)=>{
     const {email,password} = req.body
+    console.log("{email,password",email,password)
     const existingUser = await UserModel.findOne({email}).populate('idRole').populate({
         path: 'categoriesInterested.category',
         select: '_id name image'
@@ -84,8 +86,7 @@ const login = asyncHandle(async (req,res)=>{
             statusCode:'ERR',
         })
     }
-     
-    // console.log("sortedStartEvents",sortedStartEvents)
+    // console.log("password,existingUser.password",password,existingUser.password)
     const isMathPassword = await bcrypt.compare(password,existingUser.password)
     if(!isMathPassword){
         res.status(403)//ngăn không cho xuống dưới
@@ -103,9 +104,10 @@ const login = asyncHandle(async (req,res)=>{
     //     //dateB - dateA giảm dần
     //     return dateA - dateB;
     // }); 
+    const follow = await FollowModel.findOne({user:existingUser._id})
     res.status(200).json({
         message:"Đăng nhập thành công",
-        statusCode:200,
+        status:200,
         data:{
             id:existingUser.id,
             email:existingUser.email,
@@ -120,7 +122,13 @@ const login = asyncHandle(async (req,res)=>{
             categoriesInterested:existingUser?.categoriesInterested ?? [],
             viewedEvents:existingUser.viewedEvents,
             numberOfFollowers:existingUser.numberOfFollowers,
-            numberOfFollowing:existingUser.numberOfFollowing
+            numberOfFollowing:existingUser.numberOfFollowing,
+            follow:follow ?? {
+                _id:'',
+                user:'',
+                users:[]
+            }  
+
         }
     })
 })
@@ -168,6 +176,7 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
     //     //dateB - dateA giảm dần
     //     return dateA - dateB;
     // }); 
+    const follow = await FollowModel.findOne({user:existingUser._id})
     res.status(200).json({
         message:"Đăng nhập thành công",
         status:200,
@@ -185,7 +194,12 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             categoriesInterested:existingUser?.categoriesInterested ?? [],
             viewedEvents:existingUser.viewedEvents,
             numberOfFollowers:existingUser.numberOfFollowers,
-            numberOfFollowing:existingUser.numberOfFollowing
+            numberOfFollowing:existingUser.numberOfFollowing,
+            follow:follow ?? {
+                _id:'',
+                user:'',
+                users:[]
+            }
 
 
         }
@@ -215,7 +229,12 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             categoriesInterested:newUser?.categoriesInterested ?? [],
             viewedEvents:[],
             numberOfFollowers:0,
-            numberOfFollowing:0
+            numberOfFollowing:0,
+            follow:{
+                _id:'',
+                user:'',
+                users:[]
+            }
         }
     })
 

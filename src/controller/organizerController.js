@@ -12,7 +12,7 @@ const getAll = asyncHandle(async (req, res) => {
     organizers.sort((a, b) => {
         const aa = a.user.numberOfFollowers ?? 0
         const bb = b.user.numberOfFollowers ?? 0
-        return bb - aa
+        return bb - aa  
     });
 
 

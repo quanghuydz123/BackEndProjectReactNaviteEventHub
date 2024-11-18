@@ -1,9 +1,9 @@
 const mongoose =  require('mongoose')
 const PromotionSchema = new mongoose.Schema(
 {
-    SaleOff:{type:Number,require:true},
-    startDate:{type:Date,require:true},
-    endDate:{type:Date,require:true},
+    SaleOff:{type:Number,required:true},
+    startDate:{type:Date,required:true},
+    endDate:{type:Date,required:true},
 },
 {
     timestamps: true
