@@ -6,6 +6,8 @@ const asyncHandle = require('express-async-handler')
 const TypeTicketModel = require("../models/TypeTicketModel")
 const EventModel = require("../models/EventModel")
 const ShowTimeModel = require("../models/ShowTimeModel")
+const TicketModel = require("../models/TicketModel")
+const {mongoose } = require('mongoose');
 
 
 const updateStatusTypeTicket = asyncHandle(async () => {
@@ -102,6 +104,38 @@ const updateStatusEvent = asyncHandle(async () => {
 
 })
 
+const deleteTicketReserved = asyncHandle(async () => {
+  const now = new Date();
+  const expiredTickets = await TicketModel.find({
+    status: 'Reserved',
+    createdAt: { $lt: new Date(now - 15 * 60 * 1000) }, 
+  });
+  if (expiredTickets.length > 0) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      for (const ticket of expiredTickets) {
+        await TypeTicketModel.findByIdAndUpdate(
+          ticket.typeTicket,
+          { $inc: { amount: 1 } },
+          { session }
+        );
+
+        await TicketModel.findByIdAndDelete(ticket._id, { session });
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+      console.log(`Released ${expiredTickets.length} expired tickets.`);
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Failed to release expired tickets:', error);
+    }
+  }
+})
+
 cron.schedule('*/10 * * * *', async () => {
   console.log("Updating statuses...");
   await updateStatusTypeTicket();
@@ -110,8 +144,8 @@ cron.schedule('*/10 * * * *', async () => {
   console.log("Statuses updated for Event, ShowTime, and TypeTicket");
 });
 
-// cron.schedule('* * * * *', async () => {
-//   console.log("delete ticket...");
-
-// });
+cron.schedule('* * * * *', async () => {
+  console.log("delete ticket...");
+  await deleteTicketReserved()
+});
 module.exports = {}

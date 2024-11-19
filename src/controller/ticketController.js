@@ -13,6 +13,7 @@ const getAll = asyncHandle(async (req, res) => {
 
 const reserveTicket = asyncHandle(async (req, res) => {
     const { ticketChose, showTime, event, idUser } = req.body;
+    // console.log("ticketChose, showTime, event, idUser ",idUser )
     const session = await mongoose.startSession();
     session.startTransaction();
   
