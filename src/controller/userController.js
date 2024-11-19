@@ -68,15 +68,22 @@ const getUserById = asyncHandle(async (req, res) => {
 
 })
 const updateProfile = asyncHandle(async (req, res) => {
-    const { fullname, phoneNumber, bio, _id, photoUrl } = req.body
+    const { fullname, phoneNumber, bio, _id, photoUrl,address } = req.body
     if (!photoUrl) {
-        const updateUser = await UserModel.findByIdAndUpdate(_id, { fullname, phoneNumber, bio }, { new: true })
+        const updateUser = await UserModel.findByIdAndUpdate(_id, { fullname, phoneNumber, bio,address}, { new: true })
         if (updateUser) {
             res.status(200).json({
                 statusCode: 200,
                 message: 'Cập nhập thành công',
                 data: {
-                    user: updateUser
+                    user: {
+                        id:updateUser.id,
+                        photoUrl:updateUser.photoUrl,
+                        phoneNumber:updateUser.phoneNumber,
+                        fullname:updateUser.fullname,
+                        bio:updateUser.bio,
+                        address:updateUser.address
+                    }
                 }
             })
         } else {
@@ -90,7 +97,15 @@ const updateProfile = asyncHandle(async (req, res) => {
                 statusCode: 200,
                 message: 'Cập nhập thành công',
                 data: {
-                    user: updateUser
+                    user: {
+                        id:updateUser.id,
+                        photoUrl:updateUser.photoUrl,
+                        // phoneNumber:updateUser.phoneNumber,
+                        // fullname:updateUser.fullname,
+                        // bio:updateUser.bio,
+                        // address:updateUser.address
+
+                    }
                 }
             })
         } else {

@@ -127,7 +127,9 @@ const login = asyncHandle(async (req,res)=>{
                 _id:'',
                 user:'',
                 users:[]
-            }  
+            },
+            position:existingUser?.position,
+            address:existingUser?.address
 
         }
     })
@@ -199,7 +201,9 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 _id:'',
                 user:'',
                 users:[]
-            }
+            },
+            position:existingUser?.position,
+            address:existingUser?.address
 
 
         }
@@ -234,7 +238,7 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 _id:'',
                 user:'',
                 users:[]
-            }
+            },
         }
     })
 

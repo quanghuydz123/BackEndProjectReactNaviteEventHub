@@ -110,4 +110,8 @@ cron.schedule('*/10 * * * *', async () => {
   console.log("Statuses updated for Event, ShowTime, and TypeTicket");
 });
 
+// cron.schedule('* * * * *', async () => {
+//   console.log("delete ticket...");
+
+// });
 module.exports = {}

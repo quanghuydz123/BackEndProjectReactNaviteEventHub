@@ -5,6 +5,6 @@ const invoiceController = require('../controller/invoiceController');
 
 invoiceRouter.get('/get-all',invoiceController.getAll)
 invoiceRouter.post('/create-paymentInvoiceTicket',invoiceController.createPaymentInvoiceTicket)
-
+invoiceRouter.delete('/cancel-invoice',invoiceController.CancelInvoice)
 
 module.exports = invoiceRouter 

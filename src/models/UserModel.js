@@ -18,7 +18,7 @@ const UserSchema = new mongoose.Schema({
             name:{type:String,required:true},
             code:{type:Number,required:true},
         },
-        houseNumberAndStreet:{type:string}
+        houseNumberAndStreet:{type:String}
     },
     photoUrl:{type:String},
     phoneNumber:{type:String},
@@ -71,7 +71,8 @@ const UserSchema = new mongoose.Schema({
         id: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            refPath: 'historyTransaction.type'
+            refPath: 'historyTransaction.type',
+            unique:true
         },
         type: {
             type: String,

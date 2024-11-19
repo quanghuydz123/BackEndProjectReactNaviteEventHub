@@ -1,7 +1,7 @@
 const mongoose =  require('mongoose')
 const OrganizerSchema = new mongoose.Schema(
 {
-    address:{type:String},
+    // address:{type:String},
     contact:{
         linkFacebook:{type:String},
         linkZalo:{type:String},

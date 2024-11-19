@@ -22,7 +22,6 @@ const TicketSchema = new mongoose.Schema(
     invoice:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'invoices',
-        required: true,
     },
     current_owner:{
         type: mongoose.Schema.Types.ObjectId,
@@ -30,7 +29,7 @@ const TicketSchema = new mongoose.Schema(
         required: true,
     },
     seatNumber:{type:Number},
-    status:{type:String,enum:['Success','Canceled']}
+    status:{type:String,enum:['Sold','Reserved','Canceled']}
 
 },
 {
