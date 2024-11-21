@@ -29,7 +29,7 @@ const TicketSchema = new mongoose.Schema(
         required: true,
     },
     seatNumber:{type:Number},
-    status:{type:String,enum:['Sold','Reserved','Canceled']}
+    status:{type:String,enum:['Sold','Reserved','Ended','Canceled']}
 
 },
 {

@@ -8,7 +8,7 @@ const ShowTimeSchema = new mongoose.Schema(
         ref: 'typetickets',
         required:true        
     }],
-    status:{type:String,enum:['NotStarted','Ongoing','Ended','SoldOut','OnSale','SaleStopped','NotYetOnSale']}
+    status:{type:String,enum:['NotStarted','Ongoing','Ended','SoldOut','OnSale','SaleStopped','NotYetOnSale','Canceled']}
 },
 {
     timestamps: true

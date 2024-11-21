@@ -8,7 +8,7 @@ const TypeTicketSchema = new mongoose.Schema(
     price:{type:Number,min:0},
     startSaleTime:{type:Date,required:true},
     endSaleTime:{type:Date,required:true},
-    status:{type:String,enum:['NotStarted','OnSale',"Ended","SoldOut"]},
+    status:{type:String,enum:['NotStarted','OnSale',"Ended","SoldOut","Canceled"]},
     promotion:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'promotions',

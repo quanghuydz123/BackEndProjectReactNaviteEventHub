@@ -19,7 +19,7 @@ const getAll = asyncHandle(async (req, res) => {
 
 
 const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
-    const {fullname,email,phoneNumber,address,totalPrice,ticketsReserve,idUser} = req.body
+    const {fullname,email,phoneNumber,address,totalPrice,ticketsReserve,fullAddress,idUser} = req.body
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -30,13 +30,15 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
             phoneNumber:phoneNumber,
             totalPrice:totalPrice,
             totalTicket:ticketsReserve.length,
-            invoiceCode:generateUniqueID()
+            invoiceCode:generateUniqueID(),
+            fullAddress:fullAddress,
+            user:idUser
         })
         const invoiceCreated = await invoice.save({session})
         if(invoiceCreated){
             for(const ticket of ticketsReserve){
                 const checkTicket = await TicketModel.findById(ticket).session(session)
-                if(checkTicket){
+                if(checkTicket && checkTicket.status === 'Reserved'){
                     await TicketModel.findByIdAndUpdate(checkTicket._id,{invoice:invoiceCreated._id,status:'Sold'}).session(session)
                 }
                 else{
@@ -45,7 +47,7 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
                 }
             }
         }
-        const userUpdate = await UserModel.findByIdAndUpdate(idUser,{ $push: { historyTransaction: { id: invoiceCreated._id, type: "invoices" } } },{new:true}).session(session)
+        // const userUpdate = await UserModel.findByIdAndUpdate(idUser,{ $push: { historyTransaction: { id: invoiceCreated._id, type: "invoices" } } },{new:true}).session(session)
 
         await session.commitTransaction();
         session.endSession();
@@ -53,7 +55,7 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
         res.status(200).json({
             status:200,
             message:'Thanh toán thành công',
-            data:userUpdate
+            data:invoiceCreated
         })
     } catch (error) {
         await session.abortTransaction(); // Rollback transaction nếu có lỗi
@@ -75,8 +77,15 @@ const CancelInvoice = asyncHandle(async (req, res) => {
     session.startTransaction();
     try {
         for (const ticket of ticketsReserve) {
-            const ticketData = await TicketModel.findByIdAndDelete(ticket).session(session)
-            await TypeTicketModel.findByIdAndUpdate(ticketData.typeTicket,{$inc:{amount:1}}).session(session)
+            const checkTicket = await TicketModel.findById(ticket).session(session)
+            if(checkTicket && checkTicket.status === 'Reserved'){
+                const ticketData = await TicketModel.findByIdAndDelete(checkTicket._id).session(session)
+                await TypeTicketModel.findByIdAndUpdate(ticketData.typeTicket,{$inc:{amount:1}}).session(session)
+            }
+            // else{
+            //     res.status(400)
+            //     throw new Error('Lỗi khi hủy đơn hàng')
+            // }
         }
         await session.commitTransaction();
         session.endSession();

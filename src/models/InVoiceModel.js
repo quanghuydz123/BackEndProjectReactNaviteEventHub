@@ -3,13 +3,32 @@ const InVoiceSchema = new mongoose.Schema(
 {
     fullname:{type:String},
     email:{type:String,required:true},
-    paymentMethod:{type:String,enum:['vnpay'],default:'vnpay'},
+    paymentMethod:{type:String,enum:['VNPAY'],default:'VNPAY'},
     phoneNumber:{type:Number},
-    address:{type:String},
+    address:{
+        province:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        districts:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        ward:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        houseNumberAndStreet:{type:String}
+    },
+    fullAddress:{type:String},
     invoiceCode:{type:String,required:true,unique:true},
     totalTicket:{type:Number,required:true},
     totalPrice:{type:Number},
-    // note:{Type:String},
+    user:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'typetickets',
+        required:true        
+    },
     status:{type:String,enum:['Success','Failed'],default:'Success'}
     
 },

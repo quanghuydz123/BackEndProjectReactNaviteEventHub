@@ -67,19 +67,19 @@ const UserSchema = new mongoose.Schema({
             default:Date.now()
         }
     }],
-    historyTransaction: [{
-        id: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            refPath: 'historyTransaction.type',
-            unique:true
-        },
-        type: {
-            type: String,
-            enum: ['invoices', 'transfertickets'], // Loại tài liệu
-            required: true
-        }
-    }],
+    // historyTransaction: [{
+    //     id: {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         required: true,
+    //         refPath: 'historyTransaction.type',
+    //         unique:true
+    //     },
+    //     type: {
+    //         type: String,
+    //         enum: ['invoices', 'transfertickets'], // Loại tài liệu
+    //         required: true
+    //     }
+    // }],
     numberOfFollowing:{type:Number,default:0},
     numberOfFollowers:{type:Number,default:0},
     createAt:{type:Date,default:Date.now()},

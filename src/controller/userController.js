@@ -53,7 +53,7 @@ const getUserById = asyncHandle(async (req, res) => {
     // const Token = await notificationController.getAccessToken()
     // console.log("res",Token)
     if (uid) {
-        const userDetails = await UserModel.findById(uid)
+        const userDetails = await UserModel.findById(uid).select('historyTransaction').populate('historyTransaction.id')
         res.status(200).json({
             status: 200,
             message: 'Thành công',
@@ -65,8 +65,8 @@ const getUserById = asyncHandle(async (req, res) => {
         res.status(401)
         throw new Error('Người dùng không tồn tại')
     }
-
 })
+
 const updateProfile = asyncHandle(async (req, res) => {
     const { fullname, phoneNumber, bio, _id, photoUrl,address } = req.body
     if (!photoUrl) {

@@ -7,24 +7,26 @@ const TypeTicketModel = require("../models/TypeTicketModel")
 const EventModel = require("../models/EventModel")
 const ShowTimeModel = require("../models/ShowTimeModel")
 const TicketModel = require("../models/TicketModel")
-const {mongoose } = require('mongoose');
+const { mongoose } = require('mongoose');
 
 
 const updateStatusTypeTicket = asyncHandle(async () => {
   const typeTickets = await TypeTicketModel.find();
   const currentTime = new Date();
   await Promise.all((typeTickets.map(async (typeTicket) => {
-    if (currentTime < typeTicket.startSaleTime) {
-      typeTicket.status = 'NotStarted';
-    } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime) {
-      typeTicket.status = 'OnSale';
-      if (typeTicket.amount === 0) {
-        typeTicket.status = 'SoldOut';
+    if (typeTicket.status !== 'Canceled'){
+      if (currentTime < typeTicket.startSaleTime){
+        typeTicket.status = 'NotStarted';
+      } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime){
+        typeTicket.status = 'OnSale';
+        if (typeTicket.amount === 0){
+          typeTicket.status = 'SoldOut';
+        }
+      } else if (currentTime > typeTicket.endSaleTime) {
+        typeTicket.status = 'Ended';
       }
-    } else if (currentTime > typeTicket.endSaleTime) {
-      typeTicket.status = 'Ended';
+      await typeTicket.save();
     }
-    await typeTicket.save();
   })))
 
 })
@@ -33,37 +35,39 @@ const updateStatusShowTime = asyncHandle(async () => {
   const showTimes = await ShowTimeModel.find();
   const currentTime = new Date();
   await Promise.all((showTimes.map(async (showTime) => {
-    if (currentTime < showTime.startDate) {
-      showTime.status = 'NotStarted';
-    } else if (currentTime >= showTime.startDate && currentTime <= showTime.endDate) {
-      showTime.status = 'Ongoing';
-    } else if (currentTime > showTime.endDate) {
-      showTime.status = 'Ended';
-    }
-    if (showTime.status === 'Ongoing' || showTime.status === 'NotStarted') {
-      // Tải trạng thái của tất cả typeTickets liên kết với suất diễn này
-      const tickets = await TypeTicketModel.find({ _id: { $in: showTime.typeTickets } });
-      // Kiểm tra trạng thái của các vé
-      const allNotYetOnSale = tickets.every(ticket => ticket.status === 'NotStarted');
-      const allSoldOut = tickets.every(ticket => ticket.status === 'SoldOut');
-      const allSaleStopped = tickets.every(ticket => ticket.status === 'Ended');
-      const anyOnSale = tickets.some(ticket => ticket.status === 'OnSale');
+    if (showTime.status !== 'Canceled') {
+      if (currentTime < showTime.startDate) {
+        showTime.status = 'NotStarted';
+      } else if (currentTime >= showTime.startDate && currentTime <= showTime.endDate) {
+        showTime.status = 'Ongoing';
+      } else if (currentTime > showTime.endDate){
+        await TicketModel.updateMany({showTime:showTime._id},{status:'Ended'}) //khi suất diễn kết thúc thì cập nhập trạng thái vé là kết thúc
+        showTime.status = 'Ended';
+      }
+      if (showTime.status === 'Ongoing' || showTime.status === 'NotStarted') {
+        // Tải trạng thái của tất cả typeTickets liên kết với suất diễn này
+        const tickets = await TypeTicketModel.find({ _id: { $in: showTime.typeTickets } });
 
-      if (allNotYetOnSale) {
-        showTime.status = 'NotYetOnSale';
-      }
-      else if (allSoldOut) {
-        showTime.status = 'SoldOut';
+        const allNotYetOnSale = tickets.every(ticket => ticket.status === 'NotStarted');
+        const allSoldOut = tickets.every(ticket => ticket.status === 'SoldOut');
+        const allSaleStopped = tickets.every(ticket => ticket.status === 'Ended');
+        const anyOnSale = tickets.some(ticket => ticket.status === 'OnSale');
 
+        if (allNotYetOnSale) {
+          showTime.status = 'NotYetOnSale';
+        }
+        else if (allSoldOut) {
+          showTime.status = 'SoldOut';
+        }
+        else if (allSaleStopped) {
+          showTime.status = 'SaleStopped';
+        }
+        else if (anyOnSale) {
+          showTime.status = 'OnSale';
+        }
       }
-      else if (allSaleStopped) {
-        showTime.status = 'SaleStopped';
-      }
-      else if (anyOnSale) {
-        showTime.status = 'OnSale';
-      }
+      await showTime.save();
     }
-    await showTime.save();
   })))
 })
 
@@ -108,7 +112,7 @@ const deleteTicketReserved = asyncHandle(async () => {
   const now = new Date();
   const expiredTickets = await TicketModel.find({
     status: 'Reserved',
-    createdAt: { $lt: new Date(now - 15 * 60 * 1000) }, 
+    createdAt: { $lt: new Date(now - 15 * 60 * 1000) },
   });
   if (expiredTickets.length > 0) {
     const session = await mongoose.startSession();
@@ -121,7 +125,6 @@ const deleteTicketReserved = asyncHandle(async () => {
           { $inc: { amount: 1 } },
           { session }
         );
-
         await TicketModel.findByIdAndDelete(ticket._id, { session });
       }
 
@@ -145,7 +148,7 @@ cron.schedule('*/10 * * * *', async () => {
 });
 
 cron.schedule('* * * * *', async () => {
-  console.log("delete ticket...");
+  console.log("delete ticket reserve...");
   await deleteTicketReserved()
 });
 module.exports = {}
