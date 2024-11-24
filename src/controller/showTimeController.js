@@ -25,37 +25,39 @@ const updateStatusShowTime = asyncHandle(async (req, res) => {
     const showTimes = await ShowTimeModel.find();
     const currentTime = new Date();
     await Promise.all((showTimes.map(async (showTime) => {
-      if (currentTime < showTime.startDate) {
-        showTime.status = 'NotStarted';
-      } else if (currentTime >= showTime.startDate && currentTime <= showTime.endDate) {
-        showTime.status = 'Ongoing';
-      } else if (currentTime > showTime.endDate) {
-        showTime.status = 'Ended';
-      }
-      if (showTime.status === 'Ongoing' || showTime.status === 'NotStarted') {
-        // Tải trạng thái của tất cả typeTickets liên kết với suất diễn này
-        const tickets = await TypeTicketModel.find({ _id: { $in: showTime.typeTickets } });
-        // Kiểm tra trạng thái của các vé
-        const allNotYetOnSale = tickets.every(ticket => ticket.status === 'NotStarted');
-        const allSoldOut = tickets.every(ticket => ticket.status === 'SoldOut');
-        const allSaleStopped = tickets.every(ticket => ticket.status === 'Ended');
-        const anyOnSale = tickets.some(ticket => ticket.status === 'OnSale');
+      if (showTime.status !== 'Canceled') {
+        if (currentTime < showTime.startDate) {
+          showTime.status = 'NotStarted';
+        } else if (currentTime >= showTime.startDate && currentTime <= showTime.endDate) {
+          showTime.status = 'Ongoing';
+        } else if (currentTime > showTime.endDate){
+          await TicketModel.updateMany({showTime:showTime._id},{status:'Ended'}) //khi suất diễn kết thúc thì cập nhập trạng thái vé là kết thúc
+          showTime.status = 'Ended';
+        }
+        if (showTime.status === 'Ongoing' || showTime.status === 'NotStarted') {
+          // Tải trạng thái của tất cả typeTickets liên kết với suất diễn này
+          const tickets = await TypeTicketModel.find({ _id: { $in: showTime.typeTickets } });
   
-        if (allNotYetOnSale) {
-          showTime.status = 'NotYetOnSale';
-        }
-        else if (allSoldOut) {
-          showTime.status = 'SoldOut';
+          const allNotYetOnSale = tickets.every(ticket => ticket.status === 'NotStarted');
+          const allSoldOut = tickets.every(ticket => ticket.status === 'SoldOut');
+          const allSaleStopped = tickets.every(ticket => ticket.status === 'Ended');
+          const anyOnSale = tickets.some(ticket => ticket.status === 'OnSale');
   
+          if (allNotYetOnSale) {
+            showTime.status = 'NotYetOnSale';
+          }
+          else if (allSoldOut) {
+            showTime.status = 'SoldOut';
+          }
+          else if (allSaleStopped) {
+            showTime.status = 'SaleStopped';
+          }
+          else if (anyOnSale) {
+            showTime.status = 'OnSale';
+          }
         }
-        else if (allSaleStopped) {
-          showTime.status = 'SaleStopped';
-        }
-        else if (anyOnSale) {
-          showTime.status = 'OnSale';
-        }
+        await showTime.save();
       }
-          await showTime.save();
     })))
     res.status(200).json({
         status:200,

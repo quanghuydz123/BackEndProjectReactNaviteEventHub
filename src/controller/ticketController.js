@@ -77,31 +77,31 @@ const getByIdUser = asyncHandle(async (req, res) => {
   let id = new mongoose.Types.ObjectId(idUser);
   const data = await TicketModel.aggregate([
     {
-      $match: { current_owner: id},
+      $match: { current_owner: id,status:{$eq:'Sold'}},
     },
-    {
-      $lookup: {
-        from: "typetickets", // Tên collection invoices
-        localField: "typeTicket", // Khóa local (trong _id)
-        foreignField: "_id", // Khóa trong collection invoices
-        as: "typeTicketDetails", // Tên trường chứa dữ liệu liên kết
-        pipeline: [
-          {
-            '$project':
-            {
-              'description': 0,
-              'amount': 0,
-              'startSaleTime': 0,
-              'endSaleTime': 0,
-              'status': 0,
-              'createdAt': 0,
-              'updatedAt': 0,
-              '__v': 0
-            }
-          }
-        ]
-      },
-    },
+    // {
+    //   $lookup: {
+    //     from: "typetickets", // Tên collection invoices
+    //     localField: "typeTicket", // Khóa local (trong _id)
+    //     foreignField: "_id", // Khóa trong collection invoices
+    //     as: "typeTicketDetails", // Tên trường chứa dữ liệu liên kết
+    //     pipeline: [
+    //       {
+    //         '$project':
+    //         {
+    //           'description': 0,
+    //           'amount': 0,
+    //           'startSaleTime': 0,
+    //           'endSaleTime': 0,
+    //           'status': 0,
+    //           'createdAt': 0,
+    //           'updatedAt': 0,
+    //           '__v': 0
+    //         }
+    //       }
+    //     ]
+    //   },
+    // },
     {
       $group:
       {
@@ -113,17 +113,17 @@ const getByIdUser = asyncHandle(async (req, res) => {
           //  "$$ROOT" lấy toàn bộ
           $push: {
             _id: "$_id",
-            price: "$price",
-            isCheckIn: "$isCheckIn",
-            qrCode: "$qrCode",
-            status: "$status",
-            createdAt: "$createdAt",
+            // price: "$price",
+            // isCheckIn: "$isCheckIn",
+            // qrCode: "$qrCode",
+            // status: "$status",
+            // createdAt: "$createdAt",
             invoice: "$invoice",
-            typeTicket: "$typeTicket",
+            // typeTicket: "$typeTicket",
             showTime: "$showTime",
-            current_owner: "$current_owner",
+            // current_owner: "$current_owner",
             event: "$event",
-            typeTicketDetails: { $arrayElemAt: ["$typeTicketDetails", 0] },
+            // typeTicketDetails: { $arrayElemAt: ["$typeTicketDetails", 0] },
           }
         },
       }
@@ -138,9 +138,11 @@ const getByIdUser = asyncHandle(async (req, res) => {
           {
             '$project':
             {
-              'address': 0,
-              'updatedAt': 0,
-              '__v': 0,
+              // 'address': 0,
+              // 'updatedAt': 0,
+              // '__v': 0,
+              'invoiceCode':1,
+              'totalTicket':1
             }
           }
         ]
@@ -176,13 +178,18 @@ const getByIdUser = asyncHandle(async (req, res) => {
           {
             '$project':
             {
-              '_id': 1,
+              // '_id': 1,
+              // 'title': 1,
+              // 'Address': 1,
+              // 'Location': 1,
+              // 'position': 1,
+              // 'statusEvent': 1, 
+              // 'photoUrl':1
+
               'title': 1,
               'Address': 1,
               'Location': 1,
-              'position': 1,
-              'statusEvent': 1, 
-              'photoUrl':1
+
             }
           }
         ]
@@ -332,7 +339,9 @@ const getByIdInvoice = asyncHandle(async (req, res) => {
               'Address': 1,
               'Location': 1,
               'position': 1,
-              'statusEvent': 1
+              'statusEvent': 1,
+              'photoUrl':1
+
             }
           }
         ]

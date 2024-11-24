@@ -2,6 +2,7 @@ const { default: mongoose } = require("mongoose");
 
 const EventSchema = new mongoose.Schema({
     title:{type:String,required:true},
+    titleNonAccent:{type:String,required:true},
     description:{type:String},
     Address:{type:String,required:true},
     photoUrl:{type:String},

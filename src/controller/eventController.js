@@ -9,6 +9,7 @@ const {mongoose } = require('mongoose');
 
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
 const UserModel = require('../models/UserModel')
+const { cleanString } = require('../utils/handleString')
 
 
 const addEvent = asyncHandle(async (req, res) => {
@@ -88,8 +89,8 @@ const getEvents = asyncHandle(async (req, res) => {
         startAt,endAt,minPrice,maxPrice} = req.query
     // console.log("minPrice,maxPrice",minPrice,maxPrice)
     const filter = {statusEvent: { $nin: ['Cancelled', 'PendingApproval'] }}
-    const regex = new RegExp(searchValue ?? '', 'i')//để cho không phân biệt hoa thường
-    filter.title = {'$regex': regex}
+    const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
+    filter.titleNonAccent = {'$regex': regex}
     // if(categoriesFilter){
     //     filter.categories = {$in:[categoriesFilter]}
     // }
@@ -100,13 +101,13 @@ const getEvents = asyncHandle(async (req, res) => {
         filter.startAt = {$gte:new Date(startAt).getTime()}
         filter.endAt = {$lt:new Date(endAt).getTime()}
     }
-    if (minPrice && maxPrice) {
-        filter.price = { $gte: minPrice, $lte: maxPrice };
-    } else if (minPrice) {
-        filter.price = { $gte: minPrice };
-    } else if (maxPrice) {
-        filter.price = { $lte: maxPrice };
-    }
+    // if (minPrice && maxPrice) {
+    //     filter.price = { $gte: minPrice, $lte: maxPrice };
+    // } else if (minPrice) {
+    //     filter.price = { $gte: minPrice };
+    // } else if (maxPrice) {
+    //     filter.price = { $lte: maxPrice };
+    // }
     // const currentTime = new Date();
     const events = await EventModel.find(filter)
     .populate('category', '_id name image')
@@ -175,7 +176,7 @@ const getEvents = asyncHandle(async (req, res) => {
 const updateFollowerEvent = asyncHandle(async (req, res) => {
     const {idUser,idEvent} = req.body
     const event = await EventModel.findById({_id:idEvent})
-    console.log(event)
+    console.log(event)  
     res.status(200).json({
         message:'Cập nhập followers thành công',
         
@@ -374,7 +375,7 @@ const createEvent = asyncHandle(async (req, res) => {
             event.statusEvent = 'OnSale';
         }
         event.authorId = organizer._id
-        const eventCreate = new EventModel({...event,showTimes:idShowtimes})
+        const eventCreate = new EventModel({...event,showTimes:idShowtimes,titleNonAccent:cleanString(event?.title)})
         const savedEvent = await eventCreate.save({session})
       
         if(savedEvent){

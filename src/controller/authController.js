@@ -7,7 +7,8 @@ const EmailService = require('../service/EmailService')
 require('dotenv').config()
 const RoleModel = require("../models/RoleModel")
 const FollowModel = require("../models/FollowModel")
-
+const InVoiceModel = require('../models/InVoiceModel')
+const TicketModel = require('../models/TicketModel')   
 //asyncHandle có xử lý đến fontend
 const getJsonWebToken = async (email,id,key,name) => {
     const payload = {
@@ -49,6 +50,43 @@ const register = asyncHandle( async (req, res) => {
         }
     })
 })
+const getInvoiceByIdUser = asyncHandle(async (idUser) => {
+    const invoices = await InVoiceModel.find({user:idUser})
+    .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
+    .sort({createdAt:-1})
+
+    const groupedInvoices = {};
+
+    for (const invoice of invoices) {
+        const ticket = await TicketModel.findOne({ invoice: invoice._id }).populate({
+            path: 'event',
+            select: '_id title',
+        });
+
+        const monthYear =
+            'Tháng ' +
+            new Date(invoice.createdAt).toLocaleString('en-US', { month: '2-digit', year: 'numeric' });
+
+        const titleEvent = 'Mua vé ' + (ticket?.event?.title || '');
+        // const titleEventCopy = cleanString(titleEvent);
+        // if (!regex.test(titleEventCopy)) return; // Bỏ qua nếu không khớp
+
+        const invoiceData = {
+            ...invoice.toObject(),
+            titleEvent,
+        };
+
+        if (!groupedInvoices[monthYear]) {
+            groupedInvoices[monthYear] = [];
+        }
+        groupedInvoices[monthYear].push(invoiceData);
+    }
+    const result = Object.values(groupedInvoices);
+    return result
+
+   
+})
+
 const login = asyncHandle(async (req,res)=>{
     const {email,password} = req.body
     console.log("{email,password",email,password)
@@ -129,7 +167,9 @@ const login = asyncHandle(async (req,res)=>{
                 users:[]
             },
             position:existingUser?.position,
-            address:existingUser?.address
+            address:existingUser?.address,
+            invoices:await getInvoiceByIdUser(existingUser.id) ?? []
+
 
         }
     })
@@ -137,6 +177,7 @@ const login = asyncHandle(async (req,res)=>{
 
 const loginWithGoogle = asyncHandle(async (req,res)=>{
    const userInfo = req.body
+   await UserModel.findOneAndUpdate({email:userInfo.email},{googleId:userInfo.id})
    const existingUser = await UserModel.findOne({email:userInfo.email}).populate('idRole').populate({
     path: 'categoriesInterested.category',
     select: '_id name image'
@@ -203,8 +244,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 users:[]
             },
             position:existingUser?.position,
-            address:existingUser?.address
-
+            address:existingUser?.address,
+            invoices:await getInvoiceByIdUser(existingUser.id) ?? []
 
         }
     })

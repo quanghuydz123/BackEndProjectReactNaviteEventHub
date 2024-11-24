@@ -7,16 +7,16 @@ const UserSchema = new mongoose.Schema({
     password:{type:String},
     address:{
         province:{
-            name:{type:String,required:true},
-            code:{type:Number,required:true},
+            name:{type:String},
+            code:{type:Number},
         },
         districts:{
-            name:{type:String,required:true},
-            code:{type:Number,required:true},
+            name:{type:String},
+            code:{type:Number},
         },
         ward:{
-            name:{type:String,required:true},
-            code:{type:Number,required:true},
+            name:{type:String},
+            code:{type:Number},
         },
         houseNumberAndStreet:{type:String}
     },
@@ -34,6 +34,7 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'roles',
     },
+    googleId: { type: String, unique: true },
     eventsInterested:[{
         event:{
             type: mongoose.Schema.Types.ObjectId,

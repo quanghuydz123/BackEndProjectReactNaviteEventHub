@@ -27,19 +27,21 @@ const createTypeTicket = asyncHandle(async (req, res) => {
 const updateStatusTypeTicket = asyncHandle(async (req, res) => {
     const typeTickets = await TypeTicketModel.find();
     const currentTime = new Date();
-    await Promise.all((typeTickets.map(async (typeTicket)=>{
-        if (currentTime < typeTicket.startSaleTime) {
+    await Promise.all((typeTickets.map(async (typeTicket) => {
+        if (typeTicket.status !== 'Canceled'){
+          if (currentTime < typeTicket.startSaleTime){
             typeTicket.status = 'NotStarted';
-          } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime) {
+          } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime){
             typeTicket.status = 'OnSale';
-            if (typeTicket.amount === 0) {
-                typeTicket.status = 'SoldOut';
-            } 
+            if (typeTicket.amount === 0){
+              typeTicket.status = 'SoldOut';
+            }
           } else if (currentTime > typeTicket.endSaleTime) {
             typeTicket.status = 'Ended';
           }
           await typeTicket.save();
-    })))
+        }
+      })))
     res.status(200).json({
         status:200,
         message:'Thêm thành công',
