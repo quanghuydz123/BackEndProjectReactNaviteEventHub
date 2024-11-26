@@ -252,6 +252,52 @@ const interestEvent = asyncHandle(async (req, res) => {
     }
 
 })
+
+const getEventInterestedByIdUser = asyncHandle(async (req, res) => {
+    const { idUser } = req.query
+    const events = await UserModel.findByIdAndUpdate(idUser).select('eventsInterested.event')
+    .populate({
+        path:'eventsInterested.event',
+        select:'-description -authorId -uniqueViewRecord -uniqueViewCount -viewRecord',
+        match: { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] }},
+        populate:[
+        {
+            path:'category',
+            select:'_id name image',
+        },
+        {
+            path:'usersInterested.user',
+            select:'_id fullname email photoUrl',
+        },
+        {
+            path:'showTimes',
+            options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+            populate:{
+                path:'typeTickets',
+                select:'price',
+                options: { sort: { price: -1 } }, // Sắp xếp the
+
+            },
+        }]
+    })
+    const eventsMap = events.eventsInterested.map(item => item.event);
+    eventsMap.forEach(event => {//sap xếp các suất diễn đã kết thúc xuống cuối
+        event.showTimes = [
+            ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+            ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+        ];
+    });
+    // const sortedStartEvents = eventsMap.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+    //     const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
+    //     const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
+    //     return dateA - dateB;
+    // });    
+    res.status(200).json({
+        status: 200,
+        message: 'Cập nhập thành công',
+        data: eventsMap.reverse()
+    })
+})
 module.exports = {
     getAll,
     updatePositionUser,
@@ -260,6 +306,7 @@ module.exports = {
     updateProfile,
     updateRole,
     interestEvent,
-    interestCategory
+    interestCategory,
+    getEventInterestedByIdUser
 
 }

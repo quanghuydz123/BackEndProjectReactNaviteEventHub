@@ -162,6 +162,7 @@ const getByIdEvent = asyncHandle(async (req, res) => {
                                     content: '$$reply.content',
                                     createdAt: '$$reply.createdAt',
                                     updatedAt: '$$reply.updatedAt',
+                                    isDeleted: '$$reply.isDeleted',
                                     user: {
                                         $arrayElemAt: [
                                             {
@@ -174,7 +175,18 @@ const getByIdEvent = asyncHandle(async (req, res) => {
                                             0
                                         ]
                                     },
+                                    isUserReplyComment: { $eq: ['$$reply.user', idA] }
                                 }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        replyComment: {
+                            $sortArray: {
+                                input: '$replyComment',
+                                sortBy: { isUserReplyComment: -1, createdAt: 1 }
                             }
                         }
                     }
@@ -201,6 +213,7 @@ const getByIdEvent = asyncHandle(async (req, res) => {
                                 cond: { $eq: ["$$reply.isDeleted", false] } // Điều kiện lọc
                             }
                         },
+                        'replyComment':1,
                         'createdAt': 1,
                         'updatedAt': 1,
                         'replyCommentCount': 1,
@@ -237,7 +250,6 @@ const getByIdEvent = asyncHandle(async (req, res) => {
                 {
                     $addFields: {
                         isUserComment: { $cond: [{ $eq: ["$user", idU] }, 1, 0] },
-
                     }
                 }, // Thêm trường `isUserComment` để đánh dấu bình luận của người dùng hiện tại
                 { $sort: { isUserComment: -1 } }, // Sắp xếp: Bình luận của `idUser` lên đầu, sau đó theo thời gian
@@ -319,7 +331,7 @@ const getByIdEvent = asyncHandle(async (req, res) => {
                                             0
                                         ]
                                     },
-                                    isUserReplyComment: { $eq: ['$$reply.user', idU] }
+                                    isUserReplyComment: { $eq: ['$$reply.user', idA] }
                                 }
                             }
                         }

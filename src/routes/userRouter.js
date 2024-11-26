@@ -12,5 +12,6 @@ userRouter.put('/update-profile',userController.updateProfile)
 userRouter.put('/update-role',userController.updateRole)
 userRouter.post('/interest-event',userController.interestEvent)
 userRouter.post('/interest-category',userController.interestCategory)
+userRouter.get('/get-event-interested-byIdUser',userController.getEventInterestedByIdUser)
 
 module.exports = userRouter

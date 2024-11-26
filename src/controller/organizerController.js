@@ -76,7 +76,8 @@ const getEventCreatedOrganizerById = asyncHandle(async (req, res) => {
             options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
             populate:{
                 path:'typeTickets',
-                select:'price'
+                select:'price',
+                options: { sort: { price: -1 } }, // Sắp xếp the
             },
         }
             
