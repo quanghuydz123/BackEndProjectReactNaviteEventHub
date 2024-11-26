@@ -129,9 +129,7 @@ const CancelInvoice = asyncHandle(async (req, res) => {
 
 const getByIdUser = asyncHandle(async (req, res) => {
     const { idUser, searchValue } = req.query;
-
     const regex = new RegExp(removeVietnameseTones(searchValue ?? '').replace(/\s+/g, ' '), 'i');
-
     const invoices = await InVoiceModel.find({ user: idUser })
         .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
         .sort({ createdAt: -1 });
@@ -148,9 +146,11 @@ const getByIdUser = asyncHandle(async (req, res) => {
             'Tháng ' +
             new Date(invoice.createdAt).toLocaleString('en-US', { month: '2-digit', year: 'numeric' });
 
-        const titleEvent = 'Mua vé ' + (ticket?.event?.title || '');
+        const titleEvent = 'Mua vé sự kiện ' + (ticket?.event?.title || '');
+
         const titleEventCopy = cleanString(titleEvent);
-        if (!regex.test(titleEventCopy)) return; // Bỏ qua nếu không khớp
+
+        if (!regex.test(titleEventCopy)) continue; // Bỏ qua nếu không khớp
 
         const invoiceData = {
             ...invoice.toObject(),

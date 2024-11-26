@@ -67,7 +67,7 @@ const getInvoiceByIdUser = asyncHandle(async (idUser) => {
             'Tháng ' +
             new Date(invoice.createdAt).toLocaleString('en-US', { month: '2-digit', year: 'numeric' });
 
-        const titleEvent = 'Mua vé ' + (ticket?.event?.title || '');
+        const titleEvent = 'Mua vé sự kiện ' + (ticket?.event?.title || '');
         // const titleEventCopy = cleanString(titleEvent);
         // if (!regex.test(titleEventCopy)) return; // Bỏ qua nếu không khớp
 

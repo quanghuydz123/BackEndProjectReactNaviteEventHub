@@ -407,7 +407,6 @@ const createEvent = asyncHandle(async (req, res) => {
 
 const incViewEvent = asyncHandle(async (req, res) => {
     const {idUser,idEvent} = req.body
-    console.log("idUser,idEvent",idUser,idEvent)
     const event = await EventModel.findById(idEvent)
     .populate('category', '_id name image')
     // .populate('authorId')
@@ -495,6 +494,16 @@ const incViewEvent = asyncHandle(async (req, res) => {
     }
    
 })
+
+const commentEvent = asyncHandle(async (req, res) => {
+    
+    res.status(200).json({
+        status:200,
+        message:'Thành công',
+        // data:events  
+    })
+})
+
 module.exports = {
     addEvent,
     getAllEvent,
@@ -505,5 +514,6 @@ module.exports = {
     buyTicket,
     updateStatusEvent,
     createEvent,
-    incViewEvent
+    incViewEvent,
+    commentEvent
 }

@@ -173,7 +173,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             })
             // users.push({ idUser: idUserOther, idNotification: createNotification.id,status:true })
             users.push({ idUser: idUserOther})
-            const updateFollowUserOther = await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
+            await FollowModel.findByIdAndUpdate(followerUser.id, { users: users }, { new: true })
             await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:1}})
             await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:1}})
             const user = await UserModel.findById(idUser)
@@ -212,10 +212,10 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             isRead: false
         })
         users.push({ idUser: idUserOther})
-        const createfollowUserOther = await FollowModel.create({
-            user: idUser,
-            users: users
-        })
+        // const createfollowUserOther = await FollowModel.create({
+        //     user: idUser,
+        //     users: users
+        // })
         await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:1}})
         await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:1}})
         const user = await UserModel.findById(idUser)
@@ -229,7 +229,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
                     subtitle: '',
                     body: `${user.fullname} đã dõi bạn theo dõi`,
                     data: {
-
+                        type:'following'
                     }
                 }))
             )

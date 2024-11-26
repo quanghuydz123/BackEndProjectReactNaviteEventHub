@@ -41,15 +41,7 @@ const EventSchema = new mongoose.Schema({
         ref: 'showtimes',
         require:true
     }],
-    comments:[{
-        user:{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'users',
-            require:true
-        },
-        content:{type:String,require:true},
-        createdAt:{type:Date,default:Date.now()},
-    }],
+    totalComments:{type:Number,default:0},
     statusEvent:{type:String,
         enum:['PendingApproval',"NotStarted",'Ongoing','Ended','Cancelled','OnSale','SoldOut','SaleStopped','NotYetOnSale'],
         require:true,

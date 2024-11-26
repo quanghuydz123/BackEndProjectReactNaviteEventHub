@@ -9,6 +9,7 @@ const showTimeRouter = require("./showTimeRouter")
 const organizerRouter = require("./organizerRouter")
 const invoiceRouter = require("./invoiceRouter")
 const ticketRouter = require("./ticketRouter")
+const commentRouter = require("./commentRouter")
 
 const routes = (app) =>{
     app.use('/auth',authRouter)
@@ -22,6 +23,7 @@ const routes = (app) =>{
     app.use('/organizers',organizerRouter)
     app.use('/invoices',invoiceRouter)
     app.use('/tickets',ticketRouter)
+    app.use('/comments',commentRouter)
 
 
 }
