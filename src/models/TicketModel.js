@@ -4,7 +4,6 @@ const TicketSchema = new mongoose.Schema(
     price:{type:Number,required:true,default:0},
     isCheckIn:{type:Boolean,required: true,default:false},
     qrCode:{type:String,required:true,unique:true},
-    priceTicket:{type:Number,required:true,default:0},
     typeTicket:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'typetickets',

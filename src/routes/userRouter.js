@@ -13,5 +13,6 @@ userRouter.put('/update-role',userController.updateRole)
 userRouter.post('/interest-event',userController.interestEvent)
 userRouter.post('/interest-category',userController.interestCategory)
 userRouter.get('/get-event-interested-byIdUser',userController.getEventInterestedByIdUser)
+userRouter.get('/testSendGmail',userController.testSendGmail)
 
 module.exports = userRouter

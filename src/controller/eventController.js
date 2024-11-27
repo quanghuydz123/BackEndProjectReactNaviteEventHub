@@ -97,10 +97,10 @@ const getEvents = asyncHandle(async (req, res) => {
     if(categoriesFilter){
         filter.category = {$in:categoriesFilter}
     }
-    if(startAt && endAt){
-        filter.startAt = {$gte:new Date(startAt).getTime()}
-        filter.endAt = {$lt:new Date(endAt).getTime()}
-    }
+    // if(startAt && endAt){
+    //     filter.startAt = {$gte:new Date(startAt).getTime()}
+    //     filter.endAt = {$lt:new Date(endAt).getTime()}
+    // }
     // if (minPrice && maxPrice) {
     //     filter.price = { $gte: minPrice, $lte: maxPrice };
     // } else if (minPrice) {
@@ -145,6 +145,7 @@ const getEvents = asyncHandle(async (req, res) => {
     //bỏ các sự kiện đã kết thúc xuống cuối
     const sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
     // console.log(sortedEvents[0].title,sortedEvents[0].showTimes.length)
+    // const filterPriceEvent = sortedEvents.filter((item)=> console.log("item.showTimes[0].price",item.showTimes[0].price) )
     if(lat && long && distance){
         const eventsNearYou = []
         if(sortedEvents.length > 0 ){
@@ -195,23 +196,24 @@ const getEventById = asyncHandle(async (req, res) => {
                 select: '_id fullname email photoUrl bio'
             },
     ]})
-    .populate({
-        path:'showTimes',
-        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
-        populate:{
-            path:'typeTickets',
-            options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
-        }
-    }).select('-createdAt -updatedAt -uniqueViewCount -uniqueViewRecord -viewRecord -viewCount')
+    // .populate({
+    //     path:'showTimes',
+    //     options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+    //     populate:{
+    //         path:'typeTickets',
+    //         options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
+    //     }
+    // })
+    .select('-createdAt -description -updatedAt -uniqueViewCount -uniqueViewRecord -viewRecord -viewCount')
     // const showTimeCopy = event.showTimes
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // event.showTimes=showTimeCopySort
     // Sao chép mảng `showTimes` và sắp xếp
-    const showTimeCopySort = [
-        ...event.showTimes.filter(showTime => showTime.status !== 'Ended'), 
-        ...event.showTimes.filter(showTime => showTime.status === 'Ended')
-    ];
-    event.showTimes = showTimeCopySort;
+    // const showTimeCopySort = [
+    //     ...event.showTimes.filter(showTime => showTime.status !== 'Ended'), 
+    //     ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+    // ];
+    // event.showTimes = showTimeCopySort;
     res.status(200).json({
         status:200,
         message:'Thành công',
@@ -495,12 +497,58 @@ const incViewEvent = asyncHandle(async (req, res) => {
    
 })
 
-const commentEvent = asyncHandle(async (req, res) => {
-    
+const getDescriptionEvent = asyncHandle(async (req, res) => {
+    const {idEvent} = req.query
+    if(!idEvent){
+        res.status(404).json({
+            status:404,
+            message:'idEvent không có',
+        })
+    }
+    const event = await EventModel.findById(idEvent).select('description')
+    if(!event){
+        res.status(404).json({
+            status:404,
+            message:'Event không tòn tại không hệ thống',
+        })
+    }
     res.status(200).json({
         status:200,
         message:'Thành công',
-        // data:events  
+        data:event.description  
+    })
+})
+
+const getShowTimesEvent = asyncHandle(async (req, res) => {
+    const {idEvent} = req.query
+    if(!idEvent){
+        res.status(404).json({
+            status:404,
+            message:'idEvent không có',
+        })
+    }
+    const event = await EventModel.findById(idEvent).select('showTimes').populate({
+        path:'showTimes',
+        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+        populate:{
+            path:'typeTickets',
+            options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
+        }
+    })
+    const showTimeCopySort = [
+        ...event.showTimes.filter(showTime => showTime.status !== 'Ended'), 
+        ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+    ];  
+    if(!event){
+        res.status(404).json({
+            status:404,
+            message:'Event không tòn tại không hệ thống',
+        })
+    }
+    res.status(200).json({
+        status:200,
+        message:'Thành công',
+        data:showTimeCopySort
     })
 })
 
@@ -515,5 +563,6 @@ module.exports = {
     updateStatusEvent,
     createEvent,
     incViewEvent,
-    commentEvent
+    getDescriptionEvent,
+    getShowTimesEvent
 }

@@ -5,6 +5,7 @@ const asyncHandle = require('express-async-handler')
 const http = require('http')
 require('dotenv').config()
 
+const EmailService = require('../service/EmailService')
 
 
 const getAll = asyncHandle(async (req, res) => {
@@ -298,6 +299,15 @@ const getEventInterestedByIdUser = asyncHandle(async (req, res) => {
         data: eventsMap.reverse()
     })
 })
+
+const testSendGmail = asyncHandle(async (req, res) => {
+    await EmailService.handleSendMailPaymmentSuccess("test","dinhphongtamquoc453@gmail.com")
+    res.status(200).json({
+        statusCode: 200,
+        message: 'Cập nhập thành công',
+        
+    })
+})
 module.exports = {
     getAll,
     updatePositionUser,
@@ -307,6 +317,7 @@ module.exports = {
     updateRole,
     interestEvent,
     interestCategory,
-    getEventInterestedByIdUser
+    getEventInterestedByIdUser,
+    testSendGmail
 
 }

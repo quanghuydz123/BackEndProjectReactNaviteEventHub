@@ -22,13 +22,38 @@ const getJsonWebToken = async (email,id,key,name) => {
     const token = jwt.sign(payload,process.env.SECRET_KEY,{expiresIn:'7d'})
     return token
 }
-
+const validateEmail = (mail)=>{
+    if(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail)){
+        return true
+    }
+    return false
+}
 const register = asyncHandle( async (req, res) => {
     const {email,password,comfirmPassword,username} = req.body
+    if(!email || !password || !comfirmPassword){
+        res.status(402).json({
+            status:402,
+            message: "Hãy nhập đầy đủ thông tin",
+        })
+    }
     const existingUser = await UserModel.findOne({email})
+    if(!validateEmail(email)){
+        res.status(402).json({
+            status:402,
+            message: "Email không đúng định đạng",
+        })
+    }
+    if(password !== comfirmPassword){
+        res.status(402).json({
+            status:402,
+            message: "Mật khẩu nhập lại không đúng",
+        })
+    }
     if(existingUser){
-        res.status(402)//ngăn không cho xuống dưới
-        throw new Error('Email đã được đăng ký!!!')
+        res.status(402).json({
+            status:402,
+            message: "Email đã được đăng ký!!!",
+        })
     }
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
@@ -40,7 +65,7 @@ const register = asyncHandle( async (req, res) => {
     })
     await newUser.save()
     res.status(200).json({
-        statusCode:200,
+        status:200,
         message: "Đăng ký thành công",
         data:{
             email:newUser.email,
@@ -280,6 +305,7 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 user:'',
                 users:[]
             },
+            invoices:[]
         }
     })
 
@@ -287,8 +313,26 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
 })
 
 const verification = asyncHandle(async(req,res)=>{
-    const {email} = req.body
+    const {email,password,comfirmPassword} = req.body
+    if(!email || !password || !comfirmPassword){
+        return res.status(402).json({
+            status:402,
+            message: "Hãy nhập đầy đủ thông tin",
+        })
+    }
     const existingUser = await UserModel.findOne({email})
+    if(!validateEmail(email)){
+        return res.status(402).json({
+            status:402,
+            message: "Email không đúng định đạng",
+        })
+    }
+    if(password !== comfirmPassword){
+        return res.status(402).json({
+            status:402,
+            message: "Mật khẩu nhập lại không đúng",
+        })
+    }
     if(existingUser){
         res.status(402)//ngăn không cho xuống dưới
         throw new Error('Email đã được đăng ký!!!')
@@ -296,7 +340,7 @@ const verification = asyncHandle(async(req,res)=>{
     const verificationCode = Math.round(1000 + Math.random() * 9000)
     try {
         await EmailService.handleSendMail(verificationCode,email)
-        res.status(200).json({
+        return res.status(200).json({
             message:'Gửi verficationCode thành công',
             data:{
                 code: verificationCode  
@@ -311,6 +355,12 @@ const verification = asyncHandle(async(req,res)=>{
 
 const verificationForgotPassword = asyncHandle(async(req,res)=>{
     const {email} = req.body
+    if(!validateEmail(email)){
+        return res.status(402).json({
+            status:402,
+            message: "Email không đúng định đạng",
+        })
+    }
     const existingUser = await UserModel.findOne({email})
     if(!existingUser){
         res.status(402)//ngăn không cho xuống dưới
