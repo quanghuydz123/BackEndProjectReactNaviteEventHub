@@ -86,7 +86,7 @@ const   getAllEvent = asyncHandle(async (req, res) => {
 })
 const getEvents = asyncHandle(async (req, res) => {
     const {lat,long,distance,limit,limitDate,searchValue,isUpcoming,isPastEvents,categoriesFilter,
-        startAt,endAt,minPrice,maxPrice} = req.query
+        startAt,endAt,minPrice,maxPrice,sortType} = req.query
     // console.log("minPrice,maxPrice",minPrice,maxPrice)
     const filter = {statusEvent: { $nin: ['Cancelled', 'PendingApproval'] }}
     const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
@@ -124,6 +124,8 @@ const getEvents = asyncHandle(async (req, res) => {
     })
     // .limit(limit ?? 0)
     .select('-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord')
+    .sort(sortType === 'view' ? { viewCount: -1 } : {})
+    // .sort({viewCount:-1})
     // const showTimeCopy = [...events.map((event)=>event.showTimes)]
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // events.showTimes = showTimeCopySort
@@ -136,16 +138,21 @@ const getEvents = asyncHandle(async (req, res) => {
             ...event.showTimes.filter(showTime => showTime.status === 'Ended')
         ];
     });
-    const sortedStartEvents = events.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
-        const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
-        const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
-        //dateB - dateA giảm dần
-        return dateA - dateB;
-    });    
-    //bỏ các sự kiện đã kết thúc xuống cuối
-    const sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
-    // console.log(sortedEvents[0].title,sortedEvents[0].showTimes.length)
-    // const filterPriceEvent = sortedEvents.filter((item)=> console.log("item.showTimes[0].price",item.showTimes[0].price) )
+    let sortedEvents
+    if(sortType){
+        //bỏ các sự kiện đã kết thúc xuống cuối
+        sortedEvents = events.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
+    }else{
+        const sortedStartEvents = events.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+            const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
+            const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
+            //dateB - dateA giảm dần
+            return dateA - dateB;
+        });    
+        //bỏ các sự kiện đã kết thúc xuống cuối
+        sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
+    }
+
     if(lat && long && distance){
         const eventsNearYou = []
         if(sortedEvents.length > 0 ){
