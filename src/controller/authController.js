@@ -114,7 +114,6 @@ const getInvoiceByIdUser = asyncHandle(async (idUser) => {
 
 const login = asyncHandle(async (req,res)=>{
     const {email,password} = req.body
-    console.log("{email,password",email,password)
     const existingUser = await UserModel.findOne({email}).populate('idRole').populate({
         path: 'categoriesInterested.category',
         select: '_id name image'
@@ -149,7 +148,12 @@ const login = asyncHandle(async (req,res)=>{
             statusCode:'ERR',
         })
     }
-    // console.log("password,existingUser.password",password,existingUser.password)
+    if(!existingUser.password){
+        return res.status(403).json({
+            message:"Tài khoản của bạn đã đăng ký bằng Google vui lòng vào cài đặt cập nhập mật khẩu để đăng nhập bằng cách này",
+            status:403,
+        })
+    }
     const isMathPassword = await bcrypt.compare(password,existingUser.password)
     if(!isMathPassword){
         res.status(403)//ngăn không cho xuống dưới

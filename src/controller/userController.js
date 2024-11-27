@@ -301,7 +301,20 @@ const getEventInterestedByIdUser = asyncHandle(async (req, res) => {
 })
 
 const testSendGmail = asyncHandle(async (req, res) => {
-    await EmailService.handleSendMailPaymmentSuccess("test","dinhphongtamquoc453@gmail.com")
+    await EmailService.handleSendMailPaymmentSuccess({
+        invoiceCode:"09877223123",
+        titleEvent:'2024 SUPER JUNIOR-D&E WORLD TOUR : ECLIPSE in HO CHI MINH CITY',
+        showTimeStart:new Date('2024-12-31T12:30:00.000+00:00'),
+        address:'2024 SUPER JUNIOR-D&E WORLD TOUR : ECLIPSE in HO CHI MINH CITY',
+        location:'Military Zone 7 Indoor Sports Complex',
+        userName:'Nguyễn Quang Huy',
+        email:'a@gmail.com',
+        phoneNumber:'0367381282',
+        paymentTime:new Date('2024-12-31T12:30:00.000+00:00'),
+        totalTicket:5,
+        totalPrice:500000,
+
+    },"dinhphongtamquoc453@gmail.com")
     res.status(200).json({
         statusCode: 200,
         message: 'Cập nhập thành công',

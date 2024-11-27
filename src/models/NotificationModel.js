@@ -4,7 +4,6 @@ const notificationSchema = new mongoose.Schema(
     senderID:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
-        required: true,
     },
     recipientId:{
         type: mongoose.Schema.Types.ObjectId,
@@ -15,9 +14,13 @@ const notificationSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'events',
     },
+    invoiceId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'invoices',
+    },
     type: {
         type: String,
-        enum: ['inviteEvent', 'message', 'like','follow','rejectFollow','allowFollow', 'other'],
+        enum: ['inviteEvent', 'paymentTicket', 'like','follow','rejectFollow','allowFollow', 'other'],
         required: true
     },
     content:{

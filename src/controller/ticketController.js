@@ -17,7 +17,17 @@ const getAll = asyncHandle(async (req, res) => {
 
 const reserveTicket = asyncHandle(async (req, res) => {
   const { ticketChose, showTime, event, idUser } = req.body;
-  // console.log("ticketChose, showTime, event, idUser ",idUser )
+  for (const ticketC of ticketChose) {
+    const { ticket, amount } = ticketC;
+
+    const typeTicketData = await TypeTicketModel.findById(ticket);
+    if (!typeTicketData || typeTicketData.amount < amount) {
+      return res.status(400).json({
+        status: 400,
+        message: `Không đủ số lượng vé cho loại ${typeTicketData?.name}`,
+      });
+    }
+  }
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -27,10 +37,12 @@ const reserveTicket = asyncHandle(async (req, res) => {
       const { ticket, amount } = ticketC;
 
       const typeTicketData = await TypeTicketModel.findById(ticket).session(session);
-      if (!typeTicketData || typeTicketData.amount < amount) {
-        res.status(400); // Ngăn không cho xuống dưới
-        throw new Error(`Không đủ số lượng vé cho loại ${typeTicketData?.name}`);
-      }
+      // if (!typeTicketData || typeTicketData.amount < amount) {
+      //   return res.status(400).json({
+      //     status: 400,
+      //     message: `Không đủ số lượng vé cho loại ${typeTicketData?.name}`,
+      //   });
+      // }
 
       typeTicketData.amount -= amount;
       await typeTicketData.save({ session });
@@ -65,7 +77,7 @@ const reserveTicket = asyncHandle(async (req, res) => {
 
     res.status(400).json({
       status: 400,
-      message: error.message,
+      message: `abc ${error.message}`,
     });
   }
 });
