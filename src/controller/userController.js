@@ -321,6 +321,8 @@ const testSendGmail = asyncHandle(async (req, res) => {
         
     })
 })
+
+
 module.exports = {
     getAll,
     updatePositionUser,
@@ -331,6 +333,6 @@ module.exports = {
     interestEvent,
     interestCategory,
     getEventInterestedByIdUser,
-    testSendGmail
+    testSendGmail,
 
 }

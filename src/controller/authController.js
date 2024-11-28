@@ -31,26 +31,26 @@ const validateEmail = (mail)=>{
 const register = asyncHandle( async (req, res) => {
     const {email,password,comfirmPassword,username} = req.body
     if(!email || !password || !comfirmPassword){
-        res.status(402).json({
+        return res.status(402).json({
             status:402,
             message: "Hãy nhập đầy đủ thông tin",
         })
     }
     const existingUser = await UserModel.findOne({email})
     if(!validateEmail(email)){
-        res.status(402).json({
+        return res.status(402).json({
             status:402,
             message: "Email không đúng định đạng",
         })
     }
     if(password !== comfirmPassword){
-        res.status(402).json({
+        return res.status(402).json({
             status:402,
             message: "Mật khẩu nhập lại không đúng",
         })
     }
     if(existingUser){
-        res.status(402).json({
+        return res.status(402).json({
             status:402,
             message: "Email đã được đăng ký!!!",
         })
@@ -274,7 +274,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             },
             position:existingUser?.position,
             address:existingUser?.address,
-            invoices:await getInvoiceByIdUser(existingUser.id) ?? []
+            invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
+            isHasPassword:existingUser.password ? true : false
 
         }
     })
@@ -329,6 +330,12 @@ const verification = asyncHandle(async(req,res)=>{
         return res.status(402).json({
             status:402,
             message: "Email không đúng định đạng",
+        })
+    }
+    if(password.length < 6){
+        return res.status(402).json({
+            status:402,
+            message: "Mật khẩu phải có 6 ký tự trở lên",
         })
     }
     if(password !== comfirmPassword){
@@ -392,6 +399,10 @@ const forgotPassword = asyncHandle(async(req,res)=>{
         res.status(400)//ngăn không cho xuống dưới
         throw new Error('Email chưa được đăng ký!!!')
     }
+    if(password.length < 6){
+        res.status(401)//ngăn không cho xuống dưới
+        throw new Error('Mật khẩu phải có 6 ký tự trở lên')
+    }
     if(password !== comfirmPassword){
         res.status(401)//ngăn không cho xuống dưới
         throw new Error('Mật khẩu nhập lại không chính xác!!!')
@@ -439,6 +450,74 @@ const updateRole = asyncHandle(async(req,res)=>{
 
     })
 })
+const updatePassword = asyncHandle(async (req, res) => {
+    const {passwordCurrent,password,comfirmPassword,type,idUser} = req.body
+    try {
+        if(password.length < 6){
+            return res.status(400).json({
+                status: 400,
+                message: 'Mật khẩu phải có 6 ký tự trở lên!!!',
+                
+            })
+        }
+        if(password !== comfirmPassword){
+            return res.status(400).json({
+                status: 400,
+                message: 'Mật khẩu nhập lại không chính xác!!!',
+                
+            })
+        }
+        const user = await UserModel.findById(idUser)
+        if(!user){
+            return res.status(400).json({
+                status: 400,
+                message: 'Người dùng không tòn tại!!!',
+                
+            })
+        }
+        if(type==='changePassword'){
+            if(!user.password){
+                return res.status(400).json({
+                    status: 400,
+                    message: 'Bạn chưa cập nhập mật khẩu cho tài khoản này!!!'
+                })
+            }
+            const isMathPassword = await bcrypt.compare(passwordCurrent,user.password)
+            if(!isMathPassword){
+                return res.status(400).json({
+                    status: 400,
+                    message: 'Mật khẩu hiện tại không chính xác!!!'
+                })
+            }
+            const salt = await bcrypt.genSalt(10)
+            const hashedPassword = await bcrypt.hash(password, salt)
+            const userUpdate = await UserModel.findByIdAndUpdate(idUser,{password:hashedPassword},{new:true})
+            return res.status(200).json({
+                status: 200,
+                message: 'Đổi mật khẩu thành công!!!',
+                data:userUpdate
+            })
+        }
+        else
+        {
+            const salt = await bcrypt.genSalt(10)
+            const hashedPassword = await bcrypt.hash(password, salt)
+            const userUpdate = await UserModel.findByIdAndUpdate(idUser,{password:hashedPassword})
+            return res.status(200).json({
+                status: 200,
+                message: 'Cập nhập mật khẩu thành công!!!',
+                data:userUpdate
+            })
+        }
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error,
+            
+        })
+    }
+   
+})
 module.exports = {
     register,
     login,
@@ -447,5 +526,6 @@ module.exports = {
     verificationForgotPassword,
     loginWithGoogle,
     createRole,
-    updateRole
+    updateRole,
+    updatePassword
 }
