@@ -87,7 +87,6 @@ const getAllEvent = asyncHandle(async (req, res) => {
 const getEvents = asyncHandle(async (req, res) => {
     const { lat, long, distance, limit, limitDate, searchValue, isUpcoming, isPastEvents, categoriesFilter,
         startAt, endAt, minPrice=0, maxPrice=10000000, sortType } = req.query
-    console.log("minPrice,maxPrice", minPrice, maxPrice)
     // console.log("minPrice,maxPrice",minPrice,maxPrice)
     const filter = { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] } }
     const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
