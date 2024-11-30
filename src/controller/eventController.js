@@ -234,12 +234,32 @@ const getEventById = asyncHandle(async (req, res) => {
 })
 
 const updateEvent = asyncHandle(async (req, res) => {
-    const { idEvent, showTimes } = req.body
-    const event = await EventModel.findByIdAndUpdate(idEvent, { showTimes: showTimes }, { new: true })
+    const {idEvent,...updateFields } = req.body
+    let Address = '';
+    if (updateFields.addressDetails) {
+       Address = [
+        updateFields.addressDetails.houseNumberAndStreet,
+        updateFields.addressDetails.ward?.name,
+        updateFields.addressDetails.districts?.name,
+        updateFields.addressDetails.province?.name
+    ].filter(Boolean).join(', ')
+    }
+    const updateData = {
+        ...updateFields, 
+        titleNonAccent: cleanString(updateFields?.title), // Tạo thêm trường mới
+        Address:Address
+    };
+    const eventUpdate = await EventModel.findByIdAndUpdate(idEvent,updateData,{new:true})
+    if (!eventUpdate) {
+        return res.status(404).json({
+            status: 404,
+            message: 'Không tìm thấy sự kiện'
+        });
+    }
     res.status(200).json({
         status: 200,
         message: 'Thành công',
-        // data:event  
+        data:eventUpdate
     })
 })
 

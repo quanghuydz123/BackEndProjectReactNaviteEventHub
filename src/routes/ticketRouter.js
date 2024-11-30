@@ -7,6 +7,8 @@ ticketRouter.get('/get-all',ticketController.getAll)
 ticketRouter.post('/reserve-ticket',ticketController.reserveTicket)
 ticketRouter.get('/get-byIdUser',ticketController.getByIdUser)
 ticketRouter.get('/get-byIdInvoice',ticketController.getByIdInvoice)
-
+ticketRouter.get('/get-sales-summary-byIdShowTime',ticketController.getSalesSumaryByIdShowTime)
+// ticketRouter.get('/statistical-checkinByIdShowTime',ticketController.statisticalCheckinByIdShowTime)
+ticketRouter.get('/get-byIdShowTime',ticketController.getByIdShowTime)
 
 module.exports = ticketRouter 
