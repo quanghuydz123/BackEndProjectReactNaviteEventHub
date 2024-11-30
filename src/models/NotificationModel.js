@@ -20,7 +20,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
         type: String,
-        enum: ['inviteEvent', 'paymentTicket', 'like','follow','rejectFollow','allowFollow', 'other'],
+        enum: ['inviteEvent', 'paymentTicket', 'like','follow','newEvent', 'other'],
         required: true
     },
     content:{

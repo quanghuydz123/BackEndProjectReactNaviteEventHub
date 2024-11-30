@@ -6,10 +6,13 @@ const CategoryModel = require("../models/CategoryModel")
 const TypeTicketModel = require("../models/TypeTicketModel")
 const OrganizerModel = require("../models/OrganizerModel")
 const { mongoose } = require('mongoose');
+const FollowModel = require("../models/FollowModel")
 
 const calsDistanceLocation = require("../utils/calsDistanceLocation")
 const UserModel = require('../models/UserModel')
 const { cleanString } = require('../utils/handleString')
+const notificationController = require('./notificationController');
+const NotificationModel = require('../models/NotificationModel')
 
 
 const addEvent = asyncHandle(async (req, res) => {
@@ -86,7 +89,7 @@ const getAllEvent = asyncHandle(async (req, res) => {
 })
 const getEvents = asyncHandle(async (req, res) => {
     const { lat, long, distance, limit, limitDate, searchValue, isUpcoming, isPastEvents, categoriesFilter,
-        startAt, endAt, minPrice=0, maxPrice=10000000, sortType } = req.query
+        startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType } = req.query
     // console.log("minPrice,maxPrice",minPrice,maxPrice)
     const filter = { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] } }
     const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
@@ -154,7 +157,7 @@ const getEvents = asyncHandle(async (req, res) => {
     }
     const filterEventsByPrice = sortedEvents.filter((item) => {
         const showTime = item.showTimes?.[0];
-        const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length-1];
+        const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length - 1];
         return typeTicket && typeTicket.price >= minPrice && typeTicket.price <= maxPrice;
     });
     if (lat && long && distance) {
@@ -234,22 +237,22 @@ const getEventById = asyncHandle(async (req, res) => {
 })
 
 const updateEvent = asyncHandle(async (req, res) => {
-    const {idEvent,...updateFields } = req.body
+    const { idEvent, ...updateFields } = req.body
     let Address = '';
     if (updateFields.addressDetails) {
-       Address = [
-        updateFields.addressDetails.houseNumberAndStreet,
-        updateFields.addressDetails.ward?.name,
-        updateFields.addressDetails.districts?.name,
-        updateFields.addressDetails.province?.name
-    ].filter(Boolean).join(', ')
+        Address = [
+            updateFields.addressDetails.houseNumberAndStreet,
+            updateFields.addressDetails.ward?.name,
+            updateFields.addressDetails.districts?.name,
+            updateFields.addressDetails.province?.name
+        ].filter(Boolean).join(', ')
     }
     const updateData = {
-        ...updateFields, 
+        ...updateFields,
         titleNonAccent: cleanString(updateFields?.title), // Tạo thêm trường mới
-        Address:Address
+        Address: Address
     };
-    const eventUpdate = await EventModel.findByIdAndUpdate(idEvent,updateData,{new:true})
+    const eventUpdate = await EventModel.findByIdAndUpdate(idEvent, updateData, { new: true })
     if (!eventUpdate) {
         return res.status(404).json({
             status: 404,
@@ -259,7 +262,7 @@ const updateEvent = asyncHandle(async (req, res) => {
     res.status(200).json({
         status: 200,
         message: 'Thành công',
-        data:eventUpdate
+        data: eventUpdate
     })
 })
 
@@ -314,6 +317,12 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
 
 const createEvent = asyncHandle(async (req, res) => {
     const { showTimes, event, idUser } = req.body
+    if(!showTimes  || showTimes.length === 0  || !event || !idUser){
+        return res.status(404).json({
+            status: 404,
+            message: 'Hãy nhập đầy đủ thông tin',
+        })
+    }
     const session = await mongoose.startSession(); // Bắt đầu session cho transaction
     try {
         await session.startTransaction(); // Bắt đầu transaction
@@ -413,10 +422,48 @@ const createEvent = asyncHandle(async (req, res) => {
         const savedEvent = await eventCreate.save({ session })
 
         if (savedEvent) {
-            await UserModel.findByIdAndUpdate(idUser, { idRole: '66c523fa77cc482c91fcaa63' }, { session });// cập nhập quyền user là người tổ chức
+            const user = await UserModel.findByIdAndUpdate(idUser, { idRole: '66c523fa77cc482c91fcaa63' }, { session });// cập nhập quyền user là người tổ chức
             const eventCreated = [...organizer.eventCreated]
             eventCreated.push(savedEvent._id)
             await OrganizerModel.findByIdAndUpdate(organizer._id, { eventCreated: eventCreated }, { session })
+
+            const follow = await FollowModel.find({
+                users: {
+                    $elemMatch: {
+                        idUser: idUser,
+                    }
+                }
+            }).select('user').populate('user', 'fcmTokens');
+            const usersFollowing = follow.flatMap(item => item.user._id);
+            const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
+            const uniqueFcmTokens = [...new Set(fcmTokens)];
+            if (uniqueFcmTokens.length > 0) {
+                await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
+                    await notificationController.handleSendNotification({
+                        fcmToken: fcmToken,
+                        title: 'Thông báo',
+                        subtitle: '',
+                        body: `${user?.fullname ?? 'Tổ chức vô danh'} đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
+                        image: savedEvent?.photoUrl,
+                        data: {
+                            id: savedEvent._id.toString(),
+                            type: 'NewEvent'
+                        }
+                    }))
+                )
+            }
+            if (usersFollowing.length > 0) {
+                await Promise.all(usersFollowing.map(async (user) => {
+                    const notification = new NotificationModel({
+                        senderID: idUser,
+                        recipientId: user._id,
+                        eventId:savedEvent._id.toString(),
+                        type: 'newEvent',
+                        content: `${user?.fullname ?? 'Tổ chức vô danh'} đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
+                    })
+                    await notification.save({session})
+                }))
+            }
             await session.commitTransaction(); // Commit transaction nếu tất cả đều thành công
             res.status(200).json({
                 status: 200,
