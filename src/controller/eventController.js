@@ -457,7 +457,7 @@ const createEvent = asyncHandle(async (req, res) => {
                     const notification = new NotificationModel({
                         senderID: idUser,
                         recipientId: user._id,
-                        eventId:savedEvent._id.toString(),
+                        eventId:savedEvent._id,
                         type: 'newEvent',
                         content: `${user?.fullname ?? 'Tổ chức vô danh'} đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
                     })

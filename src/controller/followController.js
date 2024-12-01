@@ -289,25 +289,26 @@ const test = asyncHandle(async (req, res) => {
     const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
     const uniqueFcmTokens = [...new Set(fcmTokens)];
 
-    if (uniqueFcmTokens.length > 0) {
-        await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
-            await notificationController.handleSendNotification({
-                fcmToken: fcmToken,
-                title: 'Thông báo',
-                subtitle: '',
-                body: `VieON đã tổ chức sự kiện "ANH TRAI "SAY HI" HÀ NỘI - CONCERT 4 " hãy xem ngay nào !!!`,
-                image:'https://salt.tkbcdn.com/ts/ds/62/52/5d/d2b0dca65de299347bc36d04765aaeed.jpg',
-                data: {
-                    id: 'idEvent',
-                    type:'NewEvent'
-                  }
-            }))
-        )
-    }
+    // if (uniqueFcmTokens.length > 0) {
+    //     await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
+    //         await notificationController.handleSendNotification({
+    //             fcmToken: fcmToken,
+    //             title: 'Thông báo',
+    //             subtitle: '',
+    //             body: `VieON đã tổ chức sự kiện "ANH TRAI "SAY HI" HÀ NỘI - CONCERT 4 " hãy xem ngay nào !!!`,
+    //             image:'https://salt.tkbcdn.com/ts/ds/62/52/5d/d2b0dca65de299347bc36d04765aaeed.jpg',
+    //             data: {
+    //                 id: 'idEvent',
+    //                 type:'NewEvent'
+    //               }
+    //         }))
+    //     )
+    // }
     return res.status(200).json({
         status: 200,
         message: 'Lấy allFollower thành công',
-        // data:uniqueFcmTokens,
+        data:uniqueFcmTokens,
+        usersFollowing
     })
     })
 

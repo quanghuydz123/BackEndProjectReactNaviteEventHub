@@ -111,9 +111,94 @@ const getEventCreatedOrganizerById = asyncHandle(async (req, res) => {
     
 })
 
+const getEventCreatedOrganizerByIdForOrganizer = asyncHandle(async (req, res) => {
+    const {idUser,page =1,limit=3,filterStatus} = req.query
+    if(!idUser){
+        res.status(400)//ngăn không cho xuống dưới
+        throw new Error('Hãy nhập idUser')
+    }
+    const filter = { user:idUser }
+    let filterStatusEvent = {$nin:['']}
+    if(filterStatus){
+        if(filterStatus === 'upcoming'){
+            filterStatusEvent = {$nin: ['Cancelled', 'PendingApproval', 'Ended'] }
+        }
+        else if(filterStatus === 'past'){
+            filterStatusEvent = 'Ended'
+        }else if(filterStatus === 'pending'){
+            filterStatusEvent = 'PendingApproval'
+
+        }else if(filterStatus === 'canceled'){
+            filterStatusEvent = 'Cancelled'
+
+        }
+    }
+    const organizer = await OrganizerModel.findOne(filter).select('_id eventCreated')
+    .populate({
+        path:'eventCreated',
+        select:'-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord -usersInterested',
+        match: { statusEvent: filterStatusEvent},
+        populate:[
+        {
+            path:'category',
+            select:'_id name image',
+        },
+        {
+            path:'usersInterested.user',
+            select:'_id fullname email photoUrl',
+        },
+        {
+            path:'showTimes',
+            options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+            populate:{
+                path:'typeTickets',
+                select:'price',
+                options: { sort: { price: -1 } }, // Sắp xếp the
+            },
+        }
+            
+        ]
+    })
+    if(organizer){
+        const events = [...organizer.eventCreated]
+        events.forEach(event => {//sap xếp các suất diễn đã kết thúc xuống cuối
+            event.showTimes = [
+                ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+                ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+            ];
+        });
+        const sortedStartEvents = events.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
+            const dateA = a.showTimes[0]?.startDate ? new Date(a.showTimes[0].startDate) : new Date(0);
+            const dateB = b.showTimes[0]?.startDate ? new Date(b.showTimes[0].startDate) : new Date(0);
+            //dateB - dateA giảm dần
+            return dateA - dateB;
+        });    
+        const totalEvents = sortedStartEvents.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + parseInt(limit);
+        const paginatedEvents = sortedStartEvents.slice(startIndex, endIndex);
+        res.status(200).json({
+            status:200,
+            message:'thành công',
+            data:paginatedEvents,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalEvents / limit),
+                totalItems: totalEvents,
+                limit: parseInt(limit),
+            },
+        })
+    }else{
+        res.status(400)//ngăn không cho xuống dưới
+        throw new Error('Organizer không tồn tại')
+    }
+    
+})
+
 
 module.exports = {
     getAll,
     createOrganizer,
-    getEventCreatedOrganizerById
+    getEventCreatedOrganizerById,
+    getEventCreatedOrganizerByIdForOrganizer
 }
