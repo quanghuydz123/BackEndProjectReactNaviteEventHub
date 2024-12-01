@@ -212,10 +212,10 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             isRead: false
         })
         users.push({ idUser: idUserOther})
-        // const createfollowUserOther = await FollowModel.create({
-        //     user: idUser,
-        //     users: users
-        // })
+        await FollowModel.create({
+            user: idUser,
+            users: users
+        })
         await UserModel.findByIdAndUpdate(idUser,{$inc:{numberOfFollowing:1}})
         await UserModel.findByIdAndUpdate(idUserOther,{$inc:{numberOfFollowers:1}})
         const user = await UserModel.findById(idUser)
