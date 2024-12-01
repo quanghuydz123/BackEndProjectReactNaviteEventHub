@@ -6,7 +6,7 @@ const EventModel = require('../models/EventModel');
 const NotificationModel = require('../models/NotificationModel');
 const FollowModel = require('../models/FollowModel');
 
-const handleSendNotification = async ({ fcmToken, title, subtitle, body, data }) => {
+const handleSendNotification = async ({ fcmToken, title, subtitle, body, data,image }) => {
   var request = require('request');
   var options = {
     'method': 'POST',
@@ -21,7 +21,8 @@ const handleSendNotification = async ({ fcmToken, title, subtitle, body, data })
         "data": data,
         "notification": {
           "body": `${body}`,
-          "title": `${title}`
+          "title": `${title}`,
+          "image":`${image}`
         }
       }
     })
@@ -68,6 +69,7 @@ const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => 
           title: 'Thông báo',
           subtitle: '',
           body: `Bạn được mời tham gia sự kiện ${event.title} hãy tham gia ngay !!!`,
+          image:event?.photoUrl,
           data: {
             id: eventId,
             type:'InviteUserToEvent'

@@ -267,12 +267,57 @@ const getNumberFollow = asyncHandle(async (req, res) => {
         data: allFollower})
     })
 
+const test = asyncHandle(async (req, res) => {
+    // const { showTimes, event, idUser } = req.body
+    // if(!showTimes  || showTimes.length === 0  || !event || !idUser){
+    //     return res.status(404).json({
+    //         status: 404,
+    //         message: 'Hãy nhập đầy đủ thông tin',
+    //     })
+    // }
+    const {idUser} = req.query
+    const follow = await FollowModel.find({
+        users: {
+            $elemMatch: {
+                idUser: idUser,
+            }
+        }
+    }).select('user').populate('user','fcmTokens');
+
+    const usersFollowing = follow.flatMap(item => item.user._id);
+
+    const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
+    const uniqueFcmTokens = [...new Set(fcmTokens)];
+
+    if (uniqueFcmTokens.length > 0) {
+        await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
+            await notificationController.handleSendNotification({
+                fcmToken: fcmToken,
+                title: 'Thông báo',
+                subtitle: '',
+                body: `VieON đã tổ chức sự kiện "ANH TRAI "SAY HI" HÀ NỘI - CONCERT 4 " hãy xem ngay nào !!!`,
+                image:'https://salt.tkbcdn.com/ts/ds/62/52/5d/d2b0dca65de299347bc36d04765aaeed.jpg',
+                data: {
+                    id: 'idEvent',
+                    type:'NewEvent'
+                  }
+            }))
+        )
+    }
+    return res.status(200).json({
+        status: 200,
+        message: 'Lấy allFollower thành công',
+        // data:uniqueFcmTokens,
+    })
+    })
+
 module.exports = {
     updateFollowEvent,
     getAllFollow,
     updateFollowCategory,
     getFollowById,
     updateFollowUserOther,
-    getNumberFollow
+    getNumberFollow,
+    test
 
 }

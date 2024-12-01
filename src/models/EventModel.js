@@ -6,7 +6,7 @@ const EventSchema = new mongoose.Schema({
     description:{type:String},
     Address:{type:String,required:true},
     photoUrl:{type:String},
-    addressDetals:{type:Object},
+    // addressDetals:{type:Object},
     Location:{type:String,required:true},
     position:{type:Object,required:true},
     price:{type:Number},
@@ -19,6 +19,21 @@ const EventSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'organizers',
         required: true,
+    },
+    addressDetails:{
+        province:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        districts:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        ward:{
+            name:{type:String},
+            code:{type:Number},
+        },
+        houseNumberAndStreet:{type:String}
     },
     usersInterested:[{
         user:{

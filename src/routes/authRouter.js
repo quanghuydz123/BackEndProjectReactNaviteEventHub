@@ -11,5 +11,6 @@ authRouter.post('/verificationForgotPassword',authController.verificationForgotP
 authRouter.post('/login-with-google',authController.loginWithGoogle)
 authRouter.post('/create-role',authController.createRole)
 authRouter.put('/update-role',authController.updateRole)
+authRouter.put('/updatePassword',authController.updatePassword)
 
 module.exports = authRouter

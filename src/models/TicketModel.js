@@ -28,6 +28,10 @@ const TicketSchema = new mongoose.Schema(
         ref: 'users',
         required: true,
     },
+    promotion:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'promotions',
+    },
     seatNumber:{type:Number},
     status:{type:String,enum:['Sold','Reserved','Ended','Canceled']}
 
