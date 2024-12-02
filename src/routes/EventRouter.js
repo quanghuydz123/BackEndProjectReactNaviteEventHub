@@ -14,6 +14,7 @@ EventRouter.post('/create-event',eventController.createEvent)
 EventRouter.put('/incView-event',eventController.incViewEvent)
 EventRouter.get('/get-description-byIdEvent',eventController.getDescriptionEvent)
 EventRouter.get('/get-showTimes-byIdEvent',eventController.getShowTimesEvent)
+EventRouter.get('/get-showTimes-byIdEventForOrganizer',eventController.getShowTimesEventForOrganizer)
 
 // EventRouter.post('/comment-event',eventController.commentEvent)
 

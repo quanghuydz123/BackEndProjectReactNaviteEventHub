@@ -423,10 +423,10 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
           //  },
           totalTicketsSold: { $sum: 1 }, // Đếm số lượng vé
           totalRevenueSold: { $sum: '$price' }, // Tổng doanh thu từ trường `price`
-          totalTicketsCheckedIn: { 
-            $sum: { 
-              $cond: [ { $eq: ["$isCheckIn", true] }, 1, 0 ] 
-            } 
+          totalTicketsCheckedIn: {
+            $sum: {
+              $cond: [{ $eq: ["$isCheckIn", true] }, 1, 0]
+            }
           }
         },
       },
@@ -435,7 +435,7 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
           _id: 0,
           totalRevenueSold: 1,
           totalTicketsSold: 1,
-          totalTicketsCheckedIn:1
+          totalTicketsCheckedIn: 1
         },
       }
     ])
@@ -495,9 +495,9 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
       {
         $group: {
           _id: "$typeTickets",
-            priceSold: {
-              $push:"$soldTickets.price"
-           },
+          priceSold: {
+            $push: "$soldTickets.price"
+          },
           typeTicket: { $push: '$typeTickets' },
           totalSold: { $sum: { $size: "$soldTickets" } },
           totalCheckIn: { $sum: { $size: "$soldTicketsIsCheckedIn" } },
@@ -508,8 +508,8 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
         $project: {
           _id: 0,
           totalSold: 1,
-          totalCheckIn:1,
-          priceSold:1,
+          totalCheckIn: 1,
+          priceSold: 1,
           typeTicket: { $arrayElemAt: ["$typeTicket", 0] }
         },
       },
@@ -525,7 +525,7 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
               {
                 'name': 1,
                 'amount': 1,
-                'price':1
+                'price': 1
               }
             }
           ]
@@ -535,8 +535,8 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
         $project: {
           _id: 0,
           totalSold: 1,
-          totalCheckIn:1,
-          priceSold:{ $arrayElemAt: ["$priceSold", 0] },
+          totalCheckIn: 1,
+          priceSold: { $arrayElemAt: ["$priceSold", 0] },
           typeTicket: { $arrayElemAt: ["$ticketDetails", 0] }
         },
       },
@@ -545,7 +545,7 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
       totalTicketSoldAndtotalRevenue[0] = {
         totalRevenueSold: 0,
         totalTicketsSold: 0,
-        totalTicketsCheckedIn:0
+        totalTicketsCheckedIn: 0
       }
     }
     return res.status(200).json({
@@ -594,7 +594,7 @@ const statisticalCheckinByIdShowTime = asyncHandle(async (req, res) => {
 })
 
 const getByIdShowTime = asyncHandle(async (req, res) => {
-  const { idShowTime } = req.query
+  const { idShowTime, page = 1, limit = 3 } = req.query
   let id = new mongoose.Types.ObjectId(idShowTime);
   const data = await TicketModel.aggregate([
     {
@@ -712,7 +712,7 @@ const getByIdShowTime = asyncHandle(async (req, res) => {
     },
     {
       $sort: {
-        "showTimeDetails.startDate": 1,
+        "invoiceDetails.createdAt": 1,
       },
     },
     {
@@ -729,13 +729,22 @@ const getByIdShowTime = asyncHandle(async (req, res) => {
 
   ]);
 
-
+  const totalInvoice = data.length;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + parseInt(limit);
+  const paginatedInvoice = data.slice(startIndex, endIndex);
 
   res.status(200).json({
     status: 200,
     message: 'Đặt asdsad công',
-    data: data,
-    
+    data: paginatedInvoice,
+    pagination: {
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalInvoice / limit),
+      totalItems: totalInvoice,
+      limit: parseInt(limit),
+    },
+
   });
 })
 module.exports = {

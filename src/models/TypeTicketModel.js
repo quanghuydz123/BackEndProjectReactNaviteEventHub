@@ -5,7 +5,7 @@ const TypeTicketSchema = new mongoose.Schema(
     description:{type:String},
     type:{type:String,enum:['Free','Paid'],required:true,default:'Paid'},
     amount:{type:Number,min:0},
-    price:{type:Number,min:0},
+    price:{type:Number,min:0,default:0},
     startSaleTime:{type:Date,required:true},
     endSaleTime:{type:Date,required:true},
     status:{type:String,enum:['NotStarted','OnSale',"Ended","SoldOut","Canceled"]},

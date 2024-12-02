@@ -418,6 +418,14 @@ const createEvent = asyncHandle(async (req, res) => {
             event.statusEvent = 'OnSale';
         }
         event.authorId = organizer._id
+        if (event.addressDetails) {
+            event.Address = [
+                event.addressDetails.houseNumberAndStreet,
+                event.addressDetails.ward?.name,
+                event.addressDetails.districts?.name,
+                event.addressDetails.province?.name
+            ].filter(Boolean).join(', ');
+        }
         const eventCreate = new EventModel({ ...event, showTimes: idShowtimes, titleNonAccent: cleanString(event?.title) })
         const savedEvent = await eventCreate.save({ session })
 
@@ -437,7 +445,7 @@ const createEvent = asyncHandle(async (req, res) => {
             const usersFollowing = follow.flatMap(item => item.user._id);
             const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
             const uniqueFcmTokens = [...new Set(fcmTokens)];
-            if (uniqueFcmTokens.length > 0) {
+            if (uniqueFcmTokens && uniqueFcmTokens.length > 0) {
                 await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
                     await notificationController.handleSendNotification({
                         fcmToken: fcmToken,
@@ -452,14 +460,14 @@ const createEvent = asyncHandle(async (req, res) => {
                     }))
                 )
             }
-            if (usersFollowing.length > 0) {
+            if (usersFollowing && usersFollowing.length > 0) {
                 await Promise.all(usersFollowing.map(async (user) => {
                     const notification = new NotificationModel({
                         senderID: idUser,
                         recipientId: user._id,
                         eventId:savedEvent._id,
                         type: 'newEvent',
-                        content: `${user?.fullname ?? 'Tổ chức vô danh'} đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
+                        content: ` đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
                     })
                     await notification.save({session})
                 }))
@@ -631,6 +639,35 @@ const getShowTimesEvent = asyncHandle(async (req, res) => {
     })
 })
 
+const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
+    const { idEvent } = req.query
+    if (!idEvent) {
+        res.status(404).json({
+            status: 404,
+            message: 'idEvent không có',
+        })
+    }
+    const event = await EventModel.findById(idEvent).select('showTimes').populate({
+        path: 'showTimes',
+        options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần,
+        select:'-typeTickets'
+    })
+    const showTimeCopySort = [
+        ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+        ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+    ];
+    if (!event) {
+        res.status(404).json({
+            status: 404,
+            message: 'Event không tòn tại không hệ thống',
+        })
+    }
+    res.status(200).json({
+        status: 200,
+        message: 'Thành công',
+        data: showTimeCopySort
+    })
+})
 module.exports = {
     addEvent,
     getAllEvent,
@@ -643,5 +680,6 @@ module.exports = {
     createEvent,
     incViewEvent,
     getDescriptionEvent,
-    getShowTimesEvent
+    getShowTimesEvent,
+    getShowTimesEventForOrganizer
 }
