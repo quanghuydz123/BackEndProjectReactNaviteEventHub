@@ -8,6 +8,8 @@ const VerifyMiddleware = require('../middlewares/VerifyMiddleware');
 EventRouter.get('/get-events',eventController.getEvents)
 // EventRouter.post('/update-followers',eventController.updateFollowerEvent)
 EventRouter.get('/get-event-byId',eventController.getEventById)
+EventRouter.get('/get-event-byIdForOrganizer',eventController.getEventByIdForOrganizer)
+
 EventRouter.put('/update-event',eventController.updateEvent)
 EventRouter.put('/update-statusEvent',eventController.updateStatusEvent)
 EventRouter.post('/create-event',eventController.createEvent)

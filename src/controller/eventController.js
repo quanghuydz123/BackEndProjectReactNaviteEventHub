@@ -356,10 +356,12 @@ const createEvent = asyncHandle(async (req, res) => {
         let idShowtimes = []
         let statusShowTime = []
         for (const showtime of showTimes) {
+            delete showtime._id
             let idTypeTicket = [];
             let statusTypeTicket = [];
 
             for (const typeTicket of showtime.typeTickets) {
+                delete typeTicket._id
                 const startSaleTime = new Date(typeTicket.startSaleTime);
                 const endSaleTime = new Date(typeTicket.endSaleTime);
 
@@ -442,22 +444,30 @@ const createEvent = asyncHandle(async (req, res) => {
                     }
                 }
             }).select('user').populate('user', 'fcmTokens');
+            
             const usersFollowing = follow.flatMap(item => item.user._id);
             const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
             const uniqueFcmTokens = [...new Set(fcmTokens)];
-            if (uniqueFcmTokens && uniqueFcmTokens.length > 0) {
-                await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
-                    await notificationController.handleSendNotification({
-                        fcmToken: fcmToken,
-                        title: 'Thông báo',
-                        subtitle: '',
-                        body: `${user?.fullname ?? 'Tổ chức vô danh'} đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
-                        image: savedEvent?.photoUrl,
-                        data: {
-                            id: savedEvent._id.toString(),
-                            type: 'NewEvent'
-                        }
-                    }))
+            if (uniqueFcmTokens.length > 0) {
+                await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>{
+                    try {
+                        await notificationController.handleSendNotification({
+                            fcmToken: fcmToken,
+                            title: 'Thông báo',
+                            subtitle: '',
+                            body: `${user.fullname} đã tổ chức sự kiện ${savedEvent.title} hãy xem ngay nào !!!`,
+                            image: '',
+                            data: {
+                                id: savedEvent._id.toString(),
+                                type: 'NewEvent'
+                            }
+                        });
+                    } catch (error) {
+                        console.error(`Error sending notification to ${fcmToken}:`, error);
+                    }
+                }
+                  
+                )
                 )
             }
             if (usersFollowing && usersFollowing.length > 0) {
@@ -668,6 +678,45 @@ const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
         data: showTimeCopySort
     })
 })
+
+const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
+    const { idEvent } = req.query
+    const event = await EventModel.findById(idEvent)
+        .populate('category', '_id name image')
+        .populate('usersInterested.user', '_id fullname email photoUrl')
+        .populate({
+            path: 'authorId',
+            populate: [
+                {
+                    path: 'user',
+                    select: '_id fullname email photoUrl bio'
+                },
+            ]
+        })
+        // .populate({
+        //     path:'showTimes',
+        //     options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+        //     populate:{
+        //         path:'typeTickets',
+        //         options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
+        //     }
+        // })
+        .select('title description photoUrl addressDetails Location position category')
+    // const showTimeCopy = event.showTimes
+    // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
+    // event.showTimes=showTimeCopySort
+    // Sao chép mảng `showTimes` và sắp xếp
+    // const showTimeCopySort = [
+    //     ...event.showTimes.filter(showTime => showTime.status !== 'Ended'), 
+    //     ...event.showTimes.filter(showTime => showTime.status === 'Ended')
+    // ];
+    // event.showTimes = showTimeCopySort;
+    res.status(200).json({
+        status: 200,
+        message: 'Thành công',
+        data: event
+    })
+})
 module.exports = {
     addEvent,
     getAllEvent,
@@ -681,5 +730,6 @@ module.exports = {
     incViewEvent,
     getDescriptionEvent,
     getShowTimesEvent,
-    getShowTimesEventForOrganizer
+    getShowTimesEventForOrganizer,
+    getEventByIdForOrganizer
 }

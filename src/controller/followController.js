@@ -285,7 +285,6 @@ const test = asyncHandle(async (req, res) => {
     }).select('user').populate('user','fcmTokens');
 
     const usersFollowing = follow.flatMap(item => item.user._id);
-
     const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
     const uniqueFcmTokens = [...new Set(fcmTokens)];
 
