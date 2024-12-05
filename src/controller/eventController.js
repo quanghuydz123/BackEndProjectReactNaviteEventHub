@@ -317,6 +317,7 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
 
 const createEvent = asyncHandle(async (req, res) => {
     const { showTimes, event, idUser } = req.body
+    delete event._id
     if(!showTimes  || showTimes.length === 0  || !event || !idUser){
         return res.status(404).json({
             status: 404,
@@ -682,17 +683,6 @@ const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
 const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
     const { idEvent } = req.query
     const event = await EventModel.findById(idEvent)
-        .populate('category', '_id name image')
-        .populate('usersInterested.user', '_id fullname email photoUrl')
-        .populate({
-            path: 'authorId',
-            populate: [
-                {
-                    path: 'user',
-                    select: '_id fullname email photoUrl bio'
-                },
-            ]
-        })
         // .populate({
         //     path:'showTimes',
         //     options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần

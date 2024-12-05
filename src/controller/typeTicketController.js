@@ -16,7 +16,7 @@ const getAll = asyncHandle(async (req, res) => {
 
 const createTypeTicket = asyncHandle(async (req, res) => {
   const { name, description, type, price, startSaleTime, endSaleTime, amount, idShowTime, idEvent } = req.body
-  if (!startSaleTime || !endSaleTime || !name || !amount || !idShowTime || !idEvent) {
+  if (!startSaleTime || !endSaleTime || !name || !idShowTime || !idEvent) {
     return res.status(404).json({
       status: 404,
       message: 'Phải nhập đầy đủ thông tin !!!',
@@ -273,7 +273,7 @@ const deleteTypeTicket = asyncHandle(async (req, res) => {
   if (!idShowTime || !idTypeTicket || !idEvent) {
     return res.status(404).json({
       status: 404,
-      message: 'Phải nhập đầy đủ thông tin !!!',
+      message: 'Lỗi rồi vui lòng reload trang và thử lại !!!',
     })
   }
   const showTime = await ShowTimeModel.findById(idShowTime)
