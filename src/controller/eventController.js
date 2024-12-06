@@ -155,10 +155,21 @@ const getEvents = asyncHandle(async (req, res) => {
         //bỏ các sự kiện đã kết thúc xuống cuối
         sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
     }
+    // const filterEventsByPrice = sortedEvents.filter((item) => {
+    //     const showTime = item.showTimes?.[0];
+    //     const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length - 1];
+    //     return (!showTime?.typeTickets || 
+    //             (typeTicket && typeTicket.price >= minPrice && typeTicket.price <= maxPrice));
+    // });
     const filterEventsByPrice = sortedEvents.filter((item) => {
         const showTime = item.showTimes?.[0];
         const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length - 1];
-        return typeTicket && typeTicket.price >= minPrice && typeTicket.price <= maxPrice;
+        
+        if (!typeTicket) {
+            return true;
+        }
+    
+        return typeTicket.price >= minPrice && typeTicket.price <= maxPrice;
     });
     if (lat && long && distance) {
         const eventsNearYou = []
