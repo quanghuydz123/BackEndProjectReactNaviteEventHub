@@ -9,6 +9,7 @@ const generateUniqueID = require('../utils/generateUniqueID')
 const { removeVietnameseTones, cleanString } = require('../utils/handleString')
 const notificationController = require('./notificationController');
 const { convertMoney } = require('../utils/dateTime')
+const UserModel = require('../models/UserModel')
 
 const getAll = asyncHandle(async (req, res) => {
     const invoices = await InVoiceModel.find()
@@ -43,6 +44,13 @@ const getAll = asyncHandle(async (req, res) => {
 
 const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
     const { fullname, email, phoneNumber, address, totalPrice, ticketsReserve, fullAddress, idUser,titleEvent,showTimeStart,addressEvent,location } = req.body
+    const user = await UserModel.findById(idUser)
+    if(!user){
+        res.status(404).json({
+            status: 404,
+            message: 'Người dùng không tồn tại !!!',
+        })
+    }
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -77,6 +85,7 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
             content: `Thanh toán ${titleEvent} thành công với tổng số tiền là ${convertMoney(totalPrice)}`,
             invoiceId:invoiceCreated._id
         })
+       
         await EmailService.handleSendMailPaymmentSuccess({
             invoiceCode:invoiceCreated.invoiceCode,
             titleEvent:titleEvent,
@@ -92,6 +101,21 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
     
         },email)
 
+        const fcmTokens = user.fcmTokens
+        if (fcmTokens.length > 0) {
+            await Promise.all(fcmTokens.map(async (fcmToken) =>
+                await notificationController.handleSendNotification({
+                    fcmToken: fcmToken,
+                    title: 'Thông báo',
+                    subtitle: '',
+                    body: `Thanh toán ${titleEvent} thành công với tổng số tiền là ${convertMoney(totalPrice)}`,
+                    data: {
+                        type:'payment',
+                        idUser:idUser
+                    }
+                }))
+            )
+        }
         await session.commitTransaction();
         session.endSession();
 

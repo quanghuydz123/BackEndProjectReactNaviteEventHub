@@ -108,11 +108,10 @@ const updateShowTime = asyncHandle(async (req, res) => {
 
 const deleteShowTime = asyncHandle(async (req, res) => {
   const { idEvent,idShowTime} = req.body
-  
   if (!idEvent  || !idShowTime) {
     return res.status(400).json({ 
       status: 400, 
-      message: 'Phải nhập đầy đủ thông tin !!!' 
+      message: 'Lỗi rồi' 
     });
   }
   const showTime = await ShowTimeModel.findById(idShowTime)

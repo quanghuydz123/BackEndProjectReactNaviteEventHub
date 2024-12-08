@@ -50,7 +50,7 @@ const reserveTicket = asyncHandle(async (req, res) => {
       await typeTicketData.save({ session });
 
       const ticketsToCreate = Array.from({ length: amount }).map((item, index) => ({
-        price: typeTicketData.price,
+        price: typeTicketData.type === 'Paid' ? typeTicketData.price : 0,
         typeTicket: typeTicketData._id,
         qrCode: generateUniqueID(),
         showTime: showTime,

@@ -121,7 +121,7 @@ const getEvents = asyncHandle(async (req, res) => {
             options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
             populate: {
                 path: 'typeTickets',
-                select: 'price',
+                select: 'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
             },
         })
@@ -527,7 +527,7 @@ const incViewEvent = asyncHandle(async (req, res) => {
             options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
             populate: {
                 path: 'typeTickets',
-                select: 'price',
+                select: 'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
             },
         }).select('-description -authorId')
