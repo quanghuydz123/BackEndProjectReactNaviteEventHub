@@ -468,7 +468,7 @@ const createEvent = asyncHandle(async (req, res) => {
                             title: 'Thông báo',
                             subtitle: '',
                             body: `${user.fullname} đã tổ chức sự kiện ${savedEvent.title} hãy xem ngay nào !!!`,
-                            image: '',
+                            image: savedEvent?.photoUrl ?? '',
                             data: {
                                 id: savedEvent._id.toString(),
                                 type: 'NewEvent'

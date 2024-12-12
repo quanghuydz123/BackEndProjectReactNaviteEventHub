@@ -9,7 +9,7 @@ const EventSchema = new mongoose.Schema({
     // addressDetals:{type:Object},
     Location:{type:String,required:true},
     position:{type:Object,required:true},
-    price:{type:Number},
+    // price:{type:Number},
     category:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Categories',
@@ -79,8 +79,8 @@ const EventSchema = new mongoose.Schema({
         },
         createdAt:{type:Date,default:Date.now()},
     }],
-    startAt:{type:Date},
-    endAt:{type:Date},
+    // startAt:{type:Date},
+    // endAt:{type:Date},
     // status:{type:Boolean,require:true,default:true}
 },
 {

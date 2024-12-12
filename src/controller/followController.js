@@ -291,11 +291,11 @@ const test = asyncHandle(async (req, res) => {
     if (uniqueFcmTokens.length > 0) {
         await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>
             await notificationController.handleSendNotification({
-                fcmToken: fcmToken,
+                fcmToken: 'dF7zw68sTU2c5OZIZu9xiF:APA91bFsocHIL_hljO_ekx9jsCm4Gu8hEdXVGcc6DFMBzf_Ck9lR1hu8yfvj6IQGcSxbkDWS_Canfj7uvoiAEL_2DOWgRlqDVcZ1OLbYbHr6Za-nQaXoyMaQJyL8WKppTrwxdKsO0x_O',
                 title: 'Thông báo',
                 subtitle: '',
                 body: `VieON đã tổ chức sự kiện "ANH TRAI "SAY HI" HÀ NỘI - CONCERT 4 " hãy xem ngay nào !!!`,
-                image:'https://salt.tkbcdn.com/ts/ds/62/52/5d/d2b0dca65de299347bc36d04765aaeed.jpg',
+                image:'https://firebasestorage.googleapis.com/v0/b/eventapp-1cfef.appspot.com/o/images%2Fiamge1.jpg61533e52-0c3e-4047-b551-d2a852665bf4?alt=media&token=9c74e5ce-3e4e-4ddc-a33e-767f265d7efb',
                 data: {
                     id: 'idEvent',
                     type:'NewEvent'
