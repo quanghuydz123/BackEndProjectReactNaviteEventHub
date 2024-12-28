@@ -174,14 +174,31 @@ const CancelInvoice = asyncHandle(async (req, res) => {
 })
 
 const getByIdUser = asyncHandle(async (req, res) => {
-    const { idUser, searchValue } = req.query;
+    const { idUser, searchValue,filterMonthTime } = req.query;
     const regex = new RegExp(removeVietnameseTones(searchValue ?? '').replace(/\s+/g, ' '), 'i');
-    const invoices = await InVoiceModel.find({ user: idUser })
-        .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
-        .sort({ createdAt: -1 });
+    // const startOfMonth = new Date(2024, 12, 1);
+    // const endOfMonth = new Date(2024, 12, 31);
+    let invoices
+    if(filterMonthTime === 'all'){
+        invoices = await InVoiceModel.find({ 
+            user: idUser ,
+        })
+            .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
+            .sort({ createdAt: -1 });
+    }else{
+        invoices = await InVoiceModel.find({ 
+            user: idUser ,
+            "$expr":{"$and": [
+                { "$eq": [{ "$year": "$createdAt" }, 2024] },
+                { "$eq": [{ "$month": "$createdAt" }, Number(filterMonthTime)] }
+            ]}
+
+        })
+            .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
+            .sort({ createdAt: -1 });
+    }
 
     const groupedInvoices = {};
-
     for (const invoice of invoices) {
         const ticket = await TicketModel.findOne({ invoice: invoice._id }).populate({
             path: 'event',
