@@ -90,13 +90,9 @@ const getAllEvent = asyncHandle(async (req, res) => {
 const getEvents = asyncHandle(async (req, res) => {
     const { lat, long, distance, limit, limitDate, searchValue, isUpcoming, isPastEvents, categoriesFilter,
         startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType } = req.query
-    // console.log("minPrice,maxPrice",minPrice,maxPrice)
     const filter = { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] } }
     const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
     filter.titleNonAccent = { '$regex': regex }
-    // if(categoriesFilter){
-    //     filter.categories = {$in:[categoriesFilter]}
-    // }
     if (categoriesFilter) {
         filter.category = { $in: categoriesFilter }
     }
@@ -104,17 +100,8 @@ const getEvents = asyncHandle(async (req, res) => {
     //     filter.startAt = {$gte:new Date(startAt).getTime()}
     //     filter.endAt = {$lt:new Date(endAt).getTime()}
     // }
-    // if (minPrice && maxPrice) {
-    //     filter.price = { $gte: minPrice, $lte: maxPrice };
-    // } else if (minPrice) {
-    //     filter.price = { $gte: minPrice };
-    // } else if (maxPrice) {
-    //     filter.price = { $lte: maxPrice };
-    // }
-    // const currentTime = new Date();
     const events = await EventModel.find(filter)
         .populate('category', '_id name image')
-        // .populate('authorId')
         .populate('usersInterested.user', '_id fullname email photoUrl')
         .populate({
             path: 'showTimes',
@@ -155,20 +142,12 @@ const getEvents = asyncHandle(async (req, res) => {
         //bỏ các sự kiện đã kết thúc xuống cuối
         sortedEvents = sortedStartEvents.sort((a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended'));
     }
-    // const filterEventsByPrice = sortedEvents.filter((item) => {
-    //     const showTime = item.showTimes?.[0];
-    //     const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length - 1];
-    //     return (!showTime?.typeTickets || 
-    //             (typeTicket && typeTicket.price >= minPrice && typeTicket.price <= maxPrice));
-    // });
     const filterEventsByPrice = sortedEvents.filter((item) => {
         const showTime = item.showTimes?.[0];
         const typeTicket = showTime?.typeTickets?.[showTime?.typeTickets.length - 1];
-        
         if (!typeTicket) {
             return true;
         }
-    
         return typeTicket.price >= minPrice && typeTicket.price <= maxPrice;
     });
     if (lat && long && distance) {
@@ -187,10 +166,6 @@ const getEvents = asyncHandle(async (req, res) => {
             data: eventsNearYou.slice(0, limit)
         })
     } else {
-        // const eventsNew = events.filter(event => event.statusEvent !== 'Ended');
-        // const eventEnded = events.filter(event => event.statusEvent === 'Ended');
-        // const sortedEvents = eventsNew.concat(eventEnded);
-        // console.log("eventEnded",eventEnded)
         res.status(200).json({
             status: 200,
             message: 'Thành công',

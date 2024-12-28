@@ -9,13 +9,11 @@ const EmailService = require('../service/EmailService')
 
 
 const getAll = asyncHandle(async (req, res) => {
-    const allUser = await UserModel.find().populate('idRole')
+    const allUser = await UserModel.find().select('_id fullname email photoUrl bio numberOfFollowing numberOfFollowers')
     res.status(200).json({
         status: 200,
         message: 'Thành công',
-        data: {
-            users: allUser
-        }
+        data: allUser
     })
 })
 

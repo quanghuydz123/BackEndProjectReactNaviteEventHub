@@ -57,7 +57,7 @@ const getAccessToken = () => {
 const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => {
   const { SenderID, RecipientIds, eventId } = req.body;
   const event = await EventModel.findById(eventId);
-
+  // console.log("SenderID, RecipientIds, eventId",SenderID, RecipientIds, eventId)
   // Sử dụng Promise.all để chờ cho tất cả các async operation hoàn thành (phải có nếu không nó sẽ chạy xuống res)
   await Promise.all(RecipientIds.map(async (id) => {
     const user = await UserModel.findById(id);
@@ -72,7 +72,8 @@ const handleSendNotificationInviteUserToEvent = asyncHandle(async (req, res) => 
           image:event?.photoUrl ?? '',
           data: {
             id: eventId,
-            type:'InviteUserToEvent'
+            type:'InviteUserToEvent',
+            idUser:user.id
           }
         });
       }));

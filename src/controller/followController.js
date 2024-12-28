@@ -105,15 +105,8 @@ const getFollowById = asyncHandle(async (req, res) => {
     const follower = await FollowModel.find({ user: uid })
         .populate({
             path: 'user users.idUser',
+            select:'_id fullname email photoUrl bio numberOfFollowing numberOfFollowers'
         })
-        // .populate({
-        //     path: 'events',
-        //     populate: [
-        //         { path: 'category' },
-        //         { path: 'authorId' },
-        //         { path: 'users' }
-        //     ]
-        // });
     const numberOfFollowers = await FollowModel.find({
         users: {
             $elemMatch: {
@@ -127,7 +120,7 @@ const getFollowById = asyncHandle(async (req, res) => {
                 idUser: uid,
             }
         }
-    }).populate('user users.idUser');
+    }).populate('user users.idUser', '_id fullname email photoUrl bio numberOfFollowing numberOfFollowers');
     if (follower) {
         res.status(200).json({
             status: 200,
