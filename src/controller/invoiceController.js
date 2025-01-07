@@ -174,7 +174,7 @@ const CancelInvoice = asyncHandle(async (req, res) => {
 })
 
 const getByIdUser = asyncHandle(async (req, res) => {
-    const { idUser, searchValue,filterMonthTime } = req.query;
+    const { idUser, searchValue,filterMonthTime = 'all' } = req.query;
     const regex = new RegExp(removeVietnameseTones(searchValue ?? '').replace(/\s+/g, ' '), 'i');
     // const startOfMonth = new Date(2024, 12, 1);
     // const endOfMonth = new Date(2024, 12, 31);

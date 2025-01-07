@@ -197,7 +197,8 @@ const login = asyncHandle(async (req,res)=>{
             },
             position:existingUser?.position,
             address:existingUser?.address,
-            invoices:await getInvoiceByIdUser(existingUser.id) ?? []
+            invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
+            searchHistory:existingUser?.searchHistory ?? []
 
 
         }
@@ -275,7 +276,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             position:existingUser?.position,
             address:existingUser?.address,
             invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
-            isHasPassword:existingUser.password ? true : false
+            isHasPassword:existingUser.password ? true : false,
+            searchHistory:existingUser?.searchHistory ?? []
 
         }
     })
@@ -310,7 +312,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 user:'',
                 users:[]
             },
-            invoices:[]
+            invoices:[],
+            searchHistory:[]
         }
     })
 

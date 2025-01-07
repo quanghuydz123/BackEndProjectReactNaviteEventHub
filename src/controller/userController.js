@@ -321,6 +321,132 @@ const testSendGmail = asyncHandle(async (req, res) => {
 })
 
 
+const addHistorySearch = asyncHandle(async (req, res) => {
+    const {idUser,keyword} = req.body
+    if(!idUser || !keyword){
+        return res.status(400).json({
+            statusCode: 400,
+            message: 'Hãy nhập đầy đủ thông tin',
+        })
+    }
+    try {
+        const user = await UserModel.findById(idUser)
+        if(!user){
+            return res.status(400).json({
+                statusCode: 400,
+                message: 'User không tồn tại',
+                
+            })
+        }
+        user.searchHistory.unshift({ keyword });
+        await user.save();
+        res.status(200).json({
+            status: 200,
+            message: 'Cập nhập thành công',
+            data:user.searchHistory
+            
+        })
+    } catch (error) {
+        res.status(404).json({
+            statusCode: 404,
+            message: 'Lỗi rồi',
+            
+        })
+    }
+    
+})
+
+const deleteHistorySearch = asyncHandle(async (req, res) => {
+    const {idUser,idKeyword} = req.body
+    if(!idUser || !idKeyword){
+        return res.status(400).json({
+            statusCode: 400,
+            message: 'Hãy nhập đầy đủ thông tin',
+            
+        })
+    }
+    try {
+        const user = await UserModel.findById(idUser)
+        if(!user){
+            return res.status(400).json({
+                statusCode: 400,
+                message: 'User không tồn tại',
+                
+            })
+        }
+        const index = user.searchHistory.findIndex(item => item._id.equals(idKeyword));
+        if(index !== -1){
+            user.searchHistory.splice(index, 1);
+            await user.save()
+            res.status(200).json({
+                status: 200,
+                message: 'Xóa thành thông',
+                data:user.searchHistory
+            })
+        }else{
+            res.status(400).json({
+                status: 404,
+                message: 'Từ khóa tìm kiếm không tồn tại',
+                
+            })
+        }
+
+    } catch (error) {
+        res.status(404).json({
+            statusCode: 404,
+            message: 'Lỗi rồi',
+            
+        })
+    }
+    
+})
+
+const updateHistorySearch = asyncHandle(async (req, res) => {
+    const {idUser,idKeyword,keyword} = req.body
+    if(!idUser || !idKeyword || !keyword){
+        return res.status(400).json({
+            statusCode: 400,
+            message: 'Hãy nhập đầy đủ thông tin',
+            
+        })
+    }
+    try {
+        const user = await UserModel.findById(idUser)
+        if(!user){
+            return res.status(400).json({
+                statusCode: 400,
+                message: 'User không tồn tại',
+                
+            })
+        }
+        const index = user.searchHistory.findIndex(item => item._id.equals(idKeyword));
+        if(index !== -1){
+            user.searchHistory.splice(index, 1);
+            user.searchHistory.unshift({ keyword })
+            await user.save()
+            res.status(200).json({
+                status: 200,
+                message: 'Xóa thành thông',
+                data:user.searchHistory
+            })
+        }else{
+            res.status(400).json({
+                status: 404,
+                message: 'Từ khóa tìm kiếm không tồn tại',
+                
+            })
+        }
+
+    } catch (error) {
+        res.status(404).json({
+            statusCode: 404,
+            message: 'Lỗi rồi',
+            
+        })
+    }
+    
+})
+
 module.exports = {
     getAll,
     updatePositionUser,
@@ -332,5 +458,7 @@ module.exports = {
     interestCategory,
     getEventInterestedByIdUser,
     testSendGmail,
-
+    addHistorySearch,
+    deleteHistorySearch,
+    updateHistorySearch
 }

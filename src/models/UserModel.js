@@ -34,6 +34,11 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'roles',
     },
+    searchHistory: [{
+        keyword: { type: String, required: true },
+        searchedAt: { type: Date, default: Date.now },
+        // isDeleted:{type:Boolean,default:false}
+    }],
     googleId: { type: String, unique: true },
     eventsInterested:[{
         event:{

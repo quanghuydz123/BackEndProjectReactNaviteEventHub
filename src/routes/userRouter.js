@@ -14,5 +14,8 @@ userRouter.post('/interest-event',userController.interestEvent)
 userRouter.post('/interest-category',userController.interestCategory)
 userRouter.get('/get-event-interested-byIdUser',userController.getEventInterestedByIdUser)
 userRouter.get('/testSendGmail',userController.testSendGmail)
+userRouter.post('/add-history-search',userController.addHistorySearch)
+userRouter.delete('/delete-history-search',userController.deleteHistorySearch)
+userRouter.put('/update-history-search',userController.updateHistorySearch)
 
 module.exports = userRouter
