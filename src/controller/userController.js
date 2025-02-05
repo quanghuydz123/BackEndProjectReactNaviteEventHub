@@ -1,12 +1,65 @@
 const UserModel = require("../models/UserModel")
 const EventModel = require("../models/EventModel")
 const CategoryModel = require("../models/CategoryModel")
+const FollowModel = require("../models/FollowModel")
+const jwt = require('jsonwebtoken')
+const InVoiceModel = require("../models/InVoiceModel")
+const TicketModel = require("../models/TicketModel")
+
 const asyncHandle = require('express-async-handler')
-const http = require('http')
 require('dotenv').config()
 
 const EmailService = require('../service/EmailService')
 
+const getJsonWebToken = async (email,id,key,name) => {
+    const payload = {
+        email,
+        id,
+        role:{
+            key,
+            name
+        }
+    }
+    const token = jwt.sign(payload,process.env.SECRET_KEY,{expiresIn:'7d'})
+    return token
+}
+
+const getInvoiceByIdUser = asyncHandle(async (idUser) => {
+    const invoices = await InVoiceModel.find({user:idUser})
+    .select('-address -fullname -email -paymentMethod -phoneNumber -fullAddress -updatedAt -__v')
+    .sort({createdAt:-1})
+
+    const groupedInvoices = {};
+
+    for (const invoice of invoices) {
+        const ticket = await TicketModel.findOne({ invoice: invoice._id }).populate({
+            path: 'event',
+            select: '_id title',
+        });
+
+        const monthYear =
+            'Tháng ' +
+            new Date(invoice.createdAt).toLocaleString('en-US', { month: '2-digit', year: 'numeric' });
+
+        const titleEvent = 'Mua vé sự kiện ' + (ticket?.event?.title || '');
+        // const titleEventCopy = cleanString(titleEvent);
+        // if (!regex.test(titleEventCopy)) return; // Bỏ qua nếu không khớp
+
+        const invoiceData = {
+            ...invoice.toObject(),
+            titleEvent,
+        };
+
+        if (!groupedInvoices[monthYear]) {
+            groupedInvoices[monthYear] = [];
+        }
+        groupedInvoices[monthYear].push(invoiceData);
+    }
+    const result = Object.values(groupedInvoices);
+    return result
+
+   
+})
 
 const getAll = asyncHandle(async (req, res) => {
     const allUser = await UserModel.find().select('_id fullname email photoUrl bio numberOfFollowing numberOfFollowers')
@@ -49,22 +102,82 @@ const updateFcmtoken = asyncHandle(async (req, res) => {
 
 const getUserById = asyncHandle(async (req, res) => {
     const { uid } = req.query
-    // const Token = await notificationController.getAccessToken()
-    // console.log("res",Token)
     if (uid) {
-        const userDetails = await UserModel.findById(uid).select('historyTransaction').populate('historyTransaction.id')
+        const existingUser = await UserModel.findById(uid).populate('idRole').populate({
+            path: 'categoriesInterested.category',
+            select: '_id name image'
+            })
+            .populate({
+                path: 'viewedEvents.event',
+                select:'-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord',
+                populate:[{
+                    path:'category',
+                    select:'_id name image',
+        
+                },
+                {
+                    path:'usersInterested.user',
+                    select:'_id fullname email photoUrl',
+                },
+                {
+                    path:'showTimes',
+                    options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+                    populate:{
+                        path:'typeTickets',
+                        select:'price type',
+                        options: { sort: { price: -1 } }, // Sắp xếp thei
+                    }
+                }
+            ]
+            })
+            .select('-categoriesInterested.createdAt -categoriesInterested._id -viewedEvents.createdAt -viewedEvents._id -createdAt -updatedAt');
+           if(existingUser){
+            existingUser?.viewedEvents.forEach(item => {//sap xếp các suất diễn đã kết thúc xuống cuối
+                item.event.showTimes = [
+                    ...item.event.showTimes.filter(showTime => showTime.status !== 'Ended'),
+                    ...item.event.showTimes.filter(showTime => showTime.status === 'Ended')
+                ];
+            });
+            const follow = await FollowModel.findOne({user:existingUser._id})
         res.status(200).json({
             status: 200,
             message: 'Thành công',
-            data: {
-                user: userDetails
+            data:{
+                id:existingUser.id,
+                email:existingUser.email,
+                fullname:existingUser?.fullname,
+                photoUrl:existingUser?.photoUrl,
+                // accesstoken: await getJsonWebToken(existingUser.email,existingUser.id,existingUser.idRole.key,existingUser.idRole.name),    
+                fcmTokens:existingUser.fcmTokens ?? [],
+                phoneNumber:existingUser.phoneNumber,
+                role:existingUser?.idRole,
+                bio:existingUser.bio,
+                eventsInterested:existingUser.eventsInterested ?? [],
+                categoriesInterested:existingUser?.categoriesInterested ?? [],
+                viewedEvents:existingUser.viewedEvents,
+                numberOfFollowers:existingUser.numberOfFollowers,
+                numberOfFollowing:existingUser.numberOfFollowing,
+                follow:follow ?? {
+                    _id:'',
+                    user:'',
+                    users:[]
+                },
+                position:existingUser?.position,
+                address:existingUser?.address,
+                invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
+                isHasPassword:existingUser.password ? true : false,
+                searchHistory:existingUser?.searchHistory ?? [],
+                totalCoins:existingUser.totalCoins,
+                IsDailyCheck:existingUser.IsDailyCheck,
+                lastCheckIn:existingUser.lastCheckIn
+    
             }
         })
     } else {
         res.status(401)
         throw new Error('Người dùng không tồn tại')
     }
-})
+}})
 
 const updateProfile = asyncHandle(async (req, res) => {
     const { fullname, phoneNumber, bio, _id, photoUrl,address } = req.body
@@ -447,6 +560,54 @@ const updateHistorySearch = asyncHandle(async (req, res) => {
     
 })
 
+const checkInDaily = asyncHandle(async (req, res) => {
+    const {idUser,coins} = req.body
+    if (idUser == null || coins == null){
+        return res.status(400).json({
+            statusCode: 400,
+            message: 'Hãy nhập đầy đủ thông tin',
+            
+        })
+    }   
+    try {
+        const user = await UserModel.findById(idUser)
+        if(!user){
+            return res.status(400).json({
+                statusCode: 400,
+                message: 'User không tồn tại',
+                
+            })
+        }
+        const isDaylyCheck = user.IsDailyCheck
+       if(!isDaylyCheck){
+            user.IsDailyCheck = true
+            user.totalCoins += coins
+            user.lastCheckIn = user.lastCheckIn + 1
+            await user.save()
+            res.status(200).json({
+                status: 200,
+                message: 'Điểm danh thành công ',
+                data:{
+                    totalCoins : user.totalCoins,
+                    lastCheckIn: user.lastCheckIn
+                }
+            })
+       }else{
+        res.status(404).json({
+            statusCode: 404,
+            message: 'Bạn đã điểm danh rồi',
+        })
+       }
+
+    } catch (error) {
+        res.status(404).json({
+            statusCode: 404,
+            message: 'Lỗi rồi',
+        })
+    }
+    
+})
+
 module.exports = {
     getAll,
     updatePositionUser,
@@ -460,5 +621,6 @@ module.exports = {
     testSendGmail,
     addHistorySearch,
     deleteHistorySearch,
-    updateHistorySearch
+    updateHistorySearch,
+    checkInDaily
 }

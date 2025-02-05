@@ -198,7 +198,10 @@ const login = asyncHandle(async (req,res)=>{
             position:existingUser?.position,
             address:existingUser?.address,
             invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
-            searchHistory:existingUser?.searchHistory ?? []
+            searchHistory:existingUser?.searchHistory ?? [],
+            totalCoins:existingUser.totalCoins,
+            IsDailyCheck:existingUser.IsDailyCheck,
+            lastCheckIn:existingUser.lastCheckIn
 
 
         }
@@ -243,12 +246,6 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             ...item.event.showTimes.filter(showTime => showTime.status === 'Ended')
         ];
     });
-    // const sortedStartEvents = existingUser?.viewedEvents.sort((a, b) => {//sắp xếp sự kiện tăng dần theo thời gian xuất diễn
-    //     const dateA = a.event.showTimes[0]?.startDate ? new Date(a.event.showTimes[0].startDate) : new Date(0);
-    //     const dateB = b.event.showTimes[0]?.startDate ? new Date(b.event.showTimes[0].startDate) : new Date(0);
-    //     //dateB - dateA giảm dần
-    //     return dateA - dateB;
-    // }); 
     const follow = await FollowModel.findOne({user:existingUser._id})
     res.status(200).json({
         message:"Đăng nhập thành công",
@@ -277,7 +274,10 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
             address:existingUser?.address,
             invoices:await getInvoiceByIdUser(existingUser.id) ?? [],
             isHasPassword:existingUser.password ? true : false,
-            searchHistory:existingUser?.searchHistory ?? []
+            searchHistory:existingUser?.searchHistory ?? [],
+            totalCoins:existingUser.totalCoins,
+            IsDailyCheck:existingUser.IsDailyCheck,
+            lastCheckIn:existingUser.lastCheckIn
 
         }
     })
@@ -286,7 +286,8 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
         email:userInfo.email,
         fullname:userInfo.name,
         photoUrl:userInfo.photo,
-        idRole:'66c523b677cc482c91fcaa61'
+        idRole:'66c523b677cc482c91fcaa61',
+        googleId:userInfo.id
     })
     await newUser.save()
     res.status(200).json({
@@ -313,7 +314,10 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 users:[]
             },
             invoices:[],
-            searchHistory:[]
+            searchHistory:[],
+            totalCoins:0,
+            IsDailyCheck:false,
+            lastCheckIn:-1
         }
     })
 

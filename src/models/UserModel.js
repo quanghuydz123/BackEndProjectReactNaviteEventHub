@@ -75,6 +75,9 @@ const UserSchema = new mongoose.Schema({
     }],
     numberOfFollowing:{type:Number,default:0},
     numberOfFollowers:{type:Number,default:0},
+    lastCheckIn: { type: Number,default:-1 },
+    IsDailyCheck:{type:Boolean,default:false},
+    totalCoins:{type:Number,required:true,default:0},
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()}
 

@@ -17,5 +17,6 @@ userRouter.get('/testSendGmail',userController.testSendGmail)
 userRouter.post('/add-history-search',userController.addHistorySearch)
 userRouter.delete('/delete-history-search',userController.deleteHistorySearch)
 userRouter.put('/update-history-search',userController.updateHistorySearch)
+userRouter.put('/check-in-daily',userController.checkInDaily)
 
 module.exports = userRouter

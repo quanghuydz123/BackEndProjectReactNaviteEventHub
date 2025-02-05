@@ -8,18 +8,19 @@ const EventModel = require("../models/EventModel")
 const ShowTimeModel = require("../models/ShowTimeModel")
 const TicketModel = require("../models/TicketModel")
 const { mongoose } = require('mongoose');
+const UserModel = require('../models/UserModel');
 
 
 const updateStatusTypeTicket = asyncHandle(async () => {
   const typeTickets = await TypeTicketModel.find();
   const currentTime = new Date();
   await Promise.all((typeTickets.map(async (typeTicket) => {
-    if (typeTicket.status !== 'Canceled'){
-      if (currentTime < typeTicket.startSaleTime){
+    if (typeTicket.status !== 'Canceled') {
+      if (currentTime < typeTicket.startSaleTime) {
         typeTicket.status = 'NotStarted';
-      } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime){
+      } else if (currentTime >= typeTicket.startSaleTime && currentTime <= typeTicket.endSaleTime) {
         typeTicket.status = 'OnSale';
-        if (typeTicket.amount === 0){
+        if (typeTicket.amount === 0) {
           typeTicket.status = 'SoldOut';
         }
       } else if (currentTime > typeTicket.endSaleTime) {
@@ -40,8 +41,8 @@ const updateStatusShowTime = asyncHandle(async () => {
         showTime.status = 'NotStarted';
       } else if (currentTime >= showTime.startDate && currentTime <= showTime.endDate) {
         showTime.status = 'Ongoing';
-      } else if (currentTime > showTime.endDate){
-        await TicketModel.updateMany({showTime:showTime._id},{status:'Ended'}) //khi suất diễn kết thúc thì cập nhập trạng thái vé là kết thúc
+      } else if (currentTime > showTime.endDate) {
+        await TicketModel.updateMany({ showTime: showTime._id }, { status: 'Ended' }) //khi suất diễn kết thúc thì cập nhập trạng thái vé là kết thúc
         showTime.status = 'Ended';
       }
       if (showTime.status === 'Ongoing' || showTime.status === 'NotStarted') {
@@ -151,4 +152,17 @@ cron.schedule('* * * * *', async () => {
   console.log("delete ticket reserve...");
   await deleteTicketReserved()
 });
-module.exports = {}
+
+cron.schedule('0 0 0 * * *', async () => {
+  console.log("update daily...");
+  try {
+    await UserModel.updateMany({}, { IsDailyCheck: false });
+    await UserModel.updateMany({ lastCheckIn: 6 }, { lastCheckIn: 0 });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật hằng ngày:", error);
+
+  }
+}, {
+  scheduled: true,
+  timezone: "Asia/Ho_Chi_Minh"
+});
