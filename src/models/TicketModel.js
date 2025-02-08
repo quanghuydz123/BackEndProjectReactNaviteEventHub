@@ -33,6 +33,8 @@ const TicketSchema = new mongoose.Schema(
         ref: 'promotions',
     },
     seatNumber:{type:Number},
+    discountType:{type:String,enum:['FixedAmount','Percentage']},
+    discountValue:{type:Number},
     status:{type:String,enum:['Sold','Reserved','Ended','Canceled']}
 
 },

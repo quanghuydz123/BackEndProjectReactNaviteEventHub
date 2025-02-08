@@ -10,6 +10,7 @@ const organizerRouter = require("./organizerRouter")
 const invoiceRouter = require("./invoiceRouter")
 const ticketRouter = require("./ticketRouter")
 const commentRouter = require("./commentRouter")
+const promotionRouter = require("./promotionRouter")
 
 const routes = (app) =>{
     app.use('/auth',authRouter)
@@ -24,6 +25,7 @@ const routes = (app) =>{
     app.use('/invoices',invoiceRouter)
     app.use('/tickets',ticketRouter)
     app.use('/comments',commentRouter)
+    app.use('/promotions',promotionRouter)
 
 
 }

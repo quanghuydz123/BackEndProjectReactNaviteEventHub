@@ -110,6 +110,11 @@ const getEvents = asyncHandle(async (req, res) => {
                 path: 'typeTickets',
                 select: 'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             },
         })
         // .limit(limit ?? 0)
@@ -504,6 +509,11 @@ const incViewEvent = asyncHandle(async (req, res) => {
                 path: 'typeTickets',
                 select: 'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             },
         }).select('-description -authorId')
 
@@ -617,6 +627,10 @@ const getShowTimesEvent = asyncHandle(async (req, res) => {
         populate: {
             path: 'typeTickets',
             options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
+            populate: {
+                path: 'promotion',
+                select:'-startDate -endDate -createdAt -updatedAt',
+            }
         }
     })
     const showTimeCopySort = [

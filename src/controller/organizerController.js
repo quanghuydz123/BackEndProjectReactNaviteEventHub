@@ -78,6 +78,11 @@ const getEventCreatedOrganizerById = asyncHandle(async (req, res) => {
                 path:'typeTickets',
                 select:'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             },
         }
             
@@ -154,6 +159,11 @@ const getEventCreatedOrganizerByIdForOrganizer = asyncHandle(async (req, res) =>
                 path:'typeTickets',
                 select:'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp the
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             },
         }
             

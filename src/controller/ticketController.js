@@ -34,11 +34,11 @@ const reserveTicket = asyncHandle(async (req, res) => {
   session.startTransaction();
 
   try {
-    const createdTicketIds = []; // Danh sách lưu ID các ticket được tạo
+    const createdTicketIds = [];
     for (const ticketC of ticketChose) {
       const { ticket, amount } = ticketC;
 
-      const typeTicketData = await TypeTicketModel.findById(ticket).session(session);
+      const typeTicketData = await TypeTicketModel.findById(ticket).populate('promotion').session(session);
       // if (!typeTicketData || typeTicketData.amount < amount) {
       //   return res.status(400).json({
       //     status: 400,
@@ -49,14 +49,23 @@ const reserveTicket = asyncHandle(async (req, res) => {
       typeTicketData.amount -= amount;
       await typeTicketData.save({ session });
 
-      const ticketsToCreate = Array.from({ length: amount }).map((item, index) => ({
-        price: typeTicketData.type === 'Paid' ? typeTicketData.price : 0,
+      const hasValidPromotion =
+      typeTicketData?.promotion?.[0]?.status === "Ongoing" ||
+      typeTicketData?.promotion?.[0]?.status === "NotStarted";
+
+      const ticketsToCreate = Array.from({ length: amount }, () => ({
+        price: typeTicketData.type === "Paid" ? typeTicketData.price : 0,
         typeTicket: typeTicketData._id,
         qrCode: generateUniqueID(),
-        showTime: showTime,
-        event: event,
+        showTime,
+        event,
         current_owner: idUser,
-        status: 'Reserved',
+        status: "Reserved",
+        ...(hasValidPromotion && {
+          promotion: typeTicketData.promotion[0]._id,
+          discountType: typeTicketData.promotion[0].discountType,
+          discountValue: typeTicketData.promotion[0].discountValue,
+        }),
       }));
 
       const createdTickets = await TicketModel.insertMany(ticketsToCreate, { session });
@@ -296,6 +305,9 @@ const getByIdInvoice = asyncHandle(async (req, res) => {
             showTime: "$showTime",
             current_owner: "$current_owner",
             event: "$event",
+            discountType:'$discountType',
+            discountValue:'$discountValue',
+            promotion:'$promotion',
             typeTicketDetails: { $arrayElemAt: ["$typeTicketDetails", 0] },
           }
         },

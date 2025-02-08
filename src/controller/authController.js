@@ -137,6 +137,11 @@ const login = asyncHandle(async (req,res)=>{
                 path:'typeTickets',
                 select:'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp thei
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             }
         }
     ]
@@ -234,6 +239,11 @@ const loginWithGoogle = asyncHandle(async (req,res)=>{
                 path:'typeTickets',
                 select:'price type',
                 options: { sort: { price: -1 } }, // Sắp xếp thei
+                populate: {
+                    path: 'promotion',
+                    select:'-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 } 
+                }
             }
         }
     ]

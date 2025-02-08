@@ -29,6 +29,7 @@ const InVoiceSchema = new mongoose.Schema(
         ref: 'typetickets',
         required:true        
     },
+    totalDiscount:{type:Number,default:0},
     status:{type:String,enum:['Success','Failed'],default:'Success'}
     
 },

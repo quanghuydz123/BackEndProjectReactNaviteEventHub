@@ -43,7 +43,7 @@ const getAll = asyncHandle(async (req, res) => {
 
 
 const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
-    const { fullname, email, phoneNumber, address, totalPrice, ticketsReserve, fullAddress, idUser,titleEvent,showTimeStart,addressEvent,location } = req.body
+    const { fullname, email, phoneNumber, address, totalPrice, ticketsReserve, fullAddress,totalDiscount, idUser,titleEvent,showTimeStart,addressEvent,location } = req.body
     const user = await UserModel.findById(idUser)
     if(!user){
         res.status(404).json({
@@ -64,6 +64,7 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
             invoiceCode: generateUniqueID(),
             fullAddress: fullAddress,
             user: idUser,
+            totalDiscount:totalDiscount
         })
         const invoiceCreated = await invoice.save({ session })
         if (invoiceCreated) {

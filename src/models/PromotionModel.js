@@ -1,11 +1,22 @@
 const mongoose =  require('mongoose')
 const PromotionSchema = new mongoose.Schema(
 {
-    type:{type:String,enum:['FixedAmount','Percentage'],required:true},
-    value:{type:Number,required:true},
+    title:{type:String},
+    discountType:{type:String,enum:['FixedAmount','Percentage'],required:true},
+    discountValue:{type:Number,required:true},
     startDate:{type:Date,required:true},
     endDate:{type:Date,required:true},
-    status:{type:String,enum:['NotStarted','Ongoing','Ended','Paused','Canceled']}
+    event:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'events',
+            required: true,
+    },
+    typeTickets:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'typetickets',
+        required: true,
+    }],
+    status:{type:String,enum:['NotStarted','Ongoing','Ended','Canceled']}
 },
 {
     timestamps: true
