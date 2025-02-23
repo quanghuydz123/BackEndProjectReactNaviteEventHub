@@ -109,7 +109,7 @@ const getEvents = asyncHandle(async (req, res) => {
             populate: {
                 path: 'typeTickets',
                 select: 'price type',
-                options: { sort: { price: -1 } }, // Sắp xếp the
+                options: { sort: { price: -1 } }, 
                 populate: {
                     path: 'promotion',
                     select:'-startDate -endDate -createdAt -updatedAt',
@@ -707,6 +707,15 @@ const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
         data: event
     })
 })
+
+const getLatLongEvents = asyncHandle(async (req, res) => {
+    const events = await EventModel.find().select('_id position photoUrl')
+    res.status(200).json({
+        status: 200,
+        message: 'Thành công',
+        data: events
+    })
+})
 module.exports = {
     addEvent,
     getAllEvent,
@@ -721,5 +730,6 @@ module.exports = {
     getDescriptionEvent,
     getShowTimesEvent,
     getShowTimesEventForOrganizer,
-    getEventByIdForOrganizer
+    getEventByIdForOrganizer,
+    getLatLongEvents
 }

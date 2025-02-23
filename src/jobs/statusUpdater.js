@@ -9,6 +9,7 @@ const ShowTimeModel = require("../models/ShowTimeModel")
 const TicketModel = require("../models/TicketModel")
 const { mongoose } = require('mongoose');
 const UserModel = require('../models/UserModel');
+const PromotionModel = require("../models/PromotionModel")
 
 
 const updateStatusTypeTicket = asyncHandle(async () => {
@@ -140,13 +141,33 @@ const deleteTicketReserved = asyncHandle(async () => {
   }
 })
 
+
+const updateStatusPromotion = asyncHandle(async () => {
+  const promotions = await PromotionModel.find();
+  const currentTime = new Date();
+  await Promise.all((promotions.map(async (promotion) => {
+    if (promotion.status !== 'Canceled') {
+      if (currentTime < promotion.startDate) {
+        promotion.status = 'NotStarted';
+      } else if (currentTime >= promotion.startDate && currentTime <= promotion.endDate) {
+        promotion.status = 'Ongoing';
+      } else if (currentTime > promotion.endDate) {
+        promotion.status = 'Ended';
+      }
+      await promotion.save();
+    }
+  })))
+
+})
+
 cron.schedule('*/10 * * * *', async () => {
-  console.log("Updating statuses...");
   await updateStatusTypeTicket();
   await updateStatusShowTime();
   await updateStatusEvent();
-  console.log("Statuses updated for Event, ShowTime, and TypeTicket");
+  await updateStatusPromotion()
+  console.log("Statuses updated for Event, ShowTime, Promotion and TypeTicket");
 });
+
 
 cron.schedule('* * * * *', async () => {
   console.log("delete ticket reserve...");

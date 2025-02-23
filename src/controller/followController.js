@@ -159,7 +159,7 @@ const updateFollowUserOther = asyncHandle(async (req, res) => {
             await NotificationModel.create({
                 senderID: idUser,
                 recipientId: idUserOther,
-                type: 'allowFollow',
+                type: 'follow',
                 content: `vừa mới theo dõi bạn !!!`,
                 status: 'unanswered',
                 isRead: false
