@@ -43,7 +43,7 @@ const getAll = asyncHandle(async (req, res) => {
 
 
 const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
-    const { fullname, email, phoneNumber, address, totalPrice, ticketsReserve, fullAddress,totalDiscount, idUser,titleEvent,showTimeStart,addressEvent,location } = req.body
+    const { fullname, email, phoneNumber, address, totalPrice, ticketsReserve,totalDiscountByCoin, fullAddress,totalDiscount, idUser,titleEvent,showTimeStart,addressEvent,location } = req.body
     const user = await UserModel.findById(idUser)
     if(!user){
         res.status(404).json({
@@ -64,7 +64,8 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
             invoiceCode: generateUniqueID(),
             fullAddress: fullAddress,
             user: idUser,
-            totalDiscount:totalDiscount
+            totalDiscount:totalDiscount,
+            totalDiscountByCoin:totalDiscountByCoin
         })
         const invoiceCreated = await invoice.save({ session })
         if (invoiceCreated) {
@@ -79,13 +80,22 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
                 }
             }
         }
+        if(totalDiscountByCoin !== 0){
+            user.totalCoins -= totalDiscountByCoin
+        }
+        if(totalPrice > 5000){
+            user.totalCoins += Number((totalPrice * 0.01).toFixed()); 
+            await user.save({ session });
+        }
         // const userUpdate = await UserModel.findByIdAndUpdate(idUser,{ $push: { historyTransaction: { id: invoiceCreated._id, type: "invoices" } } },{new:true}).session(session)
-        await NotificationModel.create({
+        const notification = new NotificationModel({
             recipientId: idUser,
             type: 'paymentTicket',
             content: `Thanh toán ${titleEvent} thành công với tổng số tiền là ${convertMoney(totalPrice)}`,
             invoiceId:invoiceCreated._id
         })
+        await notification.save({session})
+        
        
         await EmailService.handleSendMailPaymmentSuccess({
             invoiceCode:invoiceCreated.invoiceCode,
@@ -123,7 +133,8 @@ const createPaymentInvoiceTicket = asyncHandle(async (req, res) => {
         res.status(200).json({
             status: 200,
             message: 'Thanh toán thành công',
-            data: invoiceCreated
+            data:invoiceCreated,
+            totalCoins:user.totalCoins
         })
     } catch (error) {
         await session.abortTransaction(); // Rollback transaction nếu có lỗi

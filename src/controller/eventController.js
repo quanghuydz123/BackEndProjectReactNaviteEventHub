@@ -550,18 +550,16 @@ const incViewEvent = asyncHandle(async (req, res) => {
             //     // Thêm bản ghi mới nếu chưa tồn tại
             //     uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
             // }
-            uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-            // Tăng uniqueViewCount
-            event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            // uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+            // event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
         } else {
-            if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
-                uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-                // Tăng uniqueViewCount
-                event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
-            }
+            // if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
+            //     uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+            //     event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            // }
         }
-        const viewRecord = [...event.viewRecord]
-        viewRecord.unshift({ user: idUser, createdAt: currentTime });
+        // const viewRecord = [...event.viewRecord]
+        // viewRecord.unshift({ user: idUser, createdAt: currentTime });
 
         event.showTimes = [
             ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
