@@ -13,6 +13,7 @@ const UserModel = require('../models/UserModel')
 const { cleanString } = require('../utils/handleString')
 const notificationController = require('./notificationController');
 const NotificationModel = require('../models/NotificationModel')
+const KeyWordModel = require('../models/KeyWordModel')
 
 
 const addEvent = asyncHandle(async (req, res) => {
@@ -89,18 +90,24 @@ const getAllEvent = asyncHandle(async (req, res) => {
 })
 const getEvents = asyncHandle(async (req, res) => {
     const { lat, long, distance, limit, limitDate, searchValue, isUpcoming, isPastEvents, categoriesFilter,
-        startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType } = req.query
+        startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType,keywordsFilter } = req.query
     const filter = { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] } }
-    const regex = new RegExp(cleanString(searchValue ?? ''), 'i')//để cho không phân biệt hoa thường
-    filter.titleNonAccent = { '$regex': regex }
+    if(searchValue){
+        const regex = new RegExp(cleanString(searchValue), 'i')//để cho không phân biệt hoa thường
+        filter.titleNonAccent = { '$regex': regex }
+    }
     if (categoriesFilter) {
         filter.category = { $in: categoriesFilter }
     }
-    // if(startAt && endAt){
-    //     filter.startAt = {$gte:new Date(startAt).getTime()}
-    //     filter.endAt = {$lt:new Date(endAt).getTime()}
-    // }
+    
+    if (keywordsFilter){
+        filter.keywords = { $in : keywordsFilter }
+    }
     const events = await EventModel.find(filter)
+        .populate({
+            path:'keywords',
+            select: '_id name popularity',
+        })
         .populate('category', '_id name image')
         .populate('usersInterested.user', '_id fullname email photoUrl')
         .populate({
@@ -188,9 +195,11 @@ const updateFollowerEvent = asyncHandle(async (req, res) => {
 
     })
 })
+
 const getEventById = asyncHandle(async (req, res) => {
     const { eid } = req.query
     const event = await EventModel.findById(eid)
+        .populate('keywords', '_id name popularity')
         .populate('category', '_id name image')
         .populate('usersInterested.user', '_id fullname email photoUrl')
         .populate({
@@ -220,6 +229,7 @@ const getEventById = asyncHandle(async (req, res) => {
     //     ...event.showTimes.filter(showTime => showTime.status === 'Ended')
     // ];
     // event.showTimes = showTimeCopySort;
+   
     res.status(200).json({
         status: 200,
         message: 'Thành công',
@@ -238,11 +248,26 @@ const updateEvent = asyncHandle(async (req, res) => {
             updateFields.addressDetails.province?.name
         ].filter(Boolean).join(', ')
     }
+    if(updateFields.keywords && updateFields.keywords.length > 0){
+        updateFields.keywords = await Promise.all(
+            updateFields.keywords.map(async (item) => {
+                if (item.isNew) {
+                    const keywordCreate = new KeyWordModel({ name: item.value });
+                    const savedKeyword = await keywordCreate.save({ session });
+                    return savedKeyword._id;
+                } else {
+                    return item.value; 
+                }
+            })
+        );
+
+    }
     const updateData = {
         ...updateFields,
         titleNonAccent: cleanString(updateFields?.title), // Tạo thêm trường mới
         Address: Address
     };
+    console.log("updateData",updateData)
     const eventUpdate = await EventModel.findByIdAndUpdate(idEvent, updateData, { new: true })
     if (!eventUpdate) {
         return res.status(404).json({
@@ -420,6 +445,31 @@ const createEvent = asyncHandle(async (req, res) => {
                 event.addressDetails.province?.name
             ].filter(Boolean).join(', ');
         }
+        if(event.keywords && event.keywords.length > 0){
+            event.keywords = await Promise.all(
+                event.keywords.map(async (item) => {
+                    if (item.isNew) {
+                        const keywordCreate = new KeyWordModel({ name: item.value });
+                        const savedKeyword = await keywordCreate.save({ session });
+                        return savedKeyword._id;
+                    } else {
+                        return item.value; 
+                    }
+                })
+            );
+
+        }
+        // if(keywordsNew && keywordsNew.length > 0 ){
+        //     const idsKeywordNew = []
+        //     for(const keyWordNew of keywordsNew){
+        //         const keywordCreate = new KeyWordModel({name:keyWordNew})
+        //         const savedKeyword = await keywordCreate.save({ session })
+        //         if(savedKeyword){
+        //             idsKeywordNew.push(savedKeyword._id)
+        //         }
+        //     }
+        //     event.keywords = event.keywords.concat(idsKeywordNew);
+        // }
         const eventCreate = new EventModel({ ...event, showTimes: idShowtimes, titleNonAccent: cleanString(event?.title) })
         const savedEvent = await eventCreate.save({ session })
 
@@ -681,6 +731,8 @@ const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
 const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
     const { idEvent } = req.query
     const event = await EventModel.findById(idEvent)
+    .populate('keywords', '_id name popularity')
+
         // .populate({
         //     path:'showTimes',
         //     options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
@@ -689,7 +741,7 @@ const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
         //         options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
         //     }
         // })
-        .select('title description photoUrl addressDetails Location position category')
+        .select('title description photoUrl addressDetails Location position category keywords')
     // const showTimeCopy = event.showTimes
     // const showTimeCopySort = showTimeCopy.sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
     // event.showTimes=showTimeCopySort
@@ -699,10 +751,20 @@ const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
     //     ...event.showTimes.filter(showTime => showTime.status === 'Ended')
     // ];
     // event.showTimes = showTimeCopySort;
+    const cloneEvent = {
+        ...event.toObject(),
+        keywords:[
+            ...event.keywords.map(({ _id, name }) => ({
+                value: _id,
+                label: name,
+            }))
+        ]
+    }
+    console.log("cloneEvent",cloneEvent)
     res.status(200).json({
         status: 200,
         message: 'Thành công',
-        data: event
+        data: cloneEvent
     })
 })
 

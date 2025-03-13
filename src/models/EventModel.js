@@ -46,8 +46,9 @@ const EventSchema = new mongoose.Schema({
         }
     }],
     keywords:[{
-        type:String,
-        unique:true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'keywords',
+        require:true
     }],
     showTimes:[{
         type: mongoose.Schema.Types.ObjectId,

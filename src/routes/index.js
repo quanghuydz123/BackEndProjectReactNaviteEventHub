@@ -11,6 +11,7 @@ const invoiceRouter = require("./invoiceRouter")
 const ticketRouter = require("./ticketRouter")
 const commentRouter = require("./commentRouter")
 const promotionRouter = require("./promotionRouter")
+const keyWordRouter = require("./keyWordRouter")
 
 const routes = (app) =>{
     app.use('/auth',authRouter)
@@ -26,6 +27,7 @@ const routes = (app) =>{
     app.use('/tickets',ticketRouter)
     app.use('/comments',commentRouter)
     app.use('/promotions',promotionRouter)
+    app.use('/keywords',keyWordRouter)
 
 
 }
