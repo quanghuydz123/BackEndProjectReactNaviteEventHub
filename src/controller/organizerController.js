@@ -1,5 +1,6 @@
 const asyncHandle = require('express-async-handler')
 const OrganizerModel = require("../models/OrganizerModel")
+const { cleanString } = require('../utils/handleString')
 
 const getAll = asyncHandle(async (req, res) => {
     const organizers = await OrganizerModel.find().select('-eventCreated -createdAt -updatedAt')
@@ -117,12 +118,14 @@ const getEventCreatedOrganizerById = asyncHandle(async (req, res) => {
 })
 
 const getEventCreatedOrganizerByIdForOrganizer = asyncHandle(async (req, res) => {
-    const {idUser,page =1,limit=3,filterStatus} = req.query
+    const {idUser,page =1,limit=3,filterStatus,searchValue} = req.query
+    console.log("idUser",idUser,filterStatus)
     if(!idUser){
         res.status(400)//ngăn không cho xuống dưới
         throw new Error('Hãy nhập idUser')
     }
     const filter = { user:idUser }
+  
     let filterStatusEvent = {$nin:['']}
     if(filterStatus){
         if(filterStatus === 'upcoming'){
@@ -138,11 +141,16 @@ const getEventCreatedOrganizerByIdForOrganizer = asyncHandle(async (req, res) =>
 
         }
     }
+    let match = { statusEvent: filterStatusEvent };
+    if(searchValue){
+        const regex = new RegExp(cleanString(searchValue), 'i')
+        match.titleNonAccent = { $regex: regex };
+    }
     const organizer = await OrganizerModel.findOne(filter).select('_id eventCreated')
     .populate({
         path:'eventCreated',
         select:'-description -authorId -uniqueViewCount -uniqueViewRecord -viewRecord -usersInterested',
-        match: { statusEvent: filterStatusEvent},
+        match,
         populate:[
         {
             path:'category',

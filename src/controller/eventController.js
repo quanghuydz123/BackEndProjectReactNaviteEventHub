@@ -90,22 +90,22 @@ const getAllEvent = asyncHandle(async (req, res) => {
 })
 const getEvents = asyncHandle(async (req, res) => {
     const { lat, long, distance, limit, limitDate, searchValue, isUpcoming, isPastEvents, categoriesFilter,
-        startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType,keywordsFilter } = req.query
+        startAt, endAt, minPrice = 0, maxPrice = 10000000, sortType, keywordsFilter } = req.query
     const filter = { statusEvent: { $nin: ['Cancelled', 'PendingApproval'] } }
-    if(searchValue){
-        const regex = new RegExp(cleanString(searchValue), 'i')//để cho không phân biệt hoa thường
+    if (searchValue) {
+        const regex = new RegExp(cleanString(searchValue), 'i')
         filter.titleNonAccent = { '$regex': regex }
     }
     if (categoriesFilter) {
         filter.category = { $in: categoriesFilter }
     }
-    
-    if (keywordsFilter){
-        filter.keywords = { $in : keywordsFilter }
+
+    if (keywordsFilter) {
+        filter.keywords = { $in: keywordsFilter }
     }
     const events = await EventModel.find(filter)
         .populate({
-            path:'keywords',
+            path: 'keywords',
             select: '_id name popularity',
         })
         .populate('category', '_id name image')
@@ -116,11 +116,11 @@ const getEvents = asyncHandle(async (req, res) => {
             populate: {
                 path: 'typeTickets',
                 select: 'price type',
-                options: { sort: { price: -1 } }, 
+                options: { sort: { price: -1 } },
                 populate: {
                     path: 'promotion',
-                    select:'-startDate -endDate -createdAt -updatedAt',
-                    options: { limit: 1 } 
+                    select: '-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 }
                 }
             },
         })
@@ -229,7 +229,7 @@ const getEventById = asyncHandle(async (req, res) => {
     //     ...event.showTimes.filter(showTime => showTime.status === 'Ended')
     // ];
     // event.showTimes = showTimeCopySort;
-   
+
     res.status(200).json({
         status: 200,
         message: 'Thành công',
@@ -240,46 +240,63 @@ const getEventById = asyncHandle(async (req, res) => {
 const updateEvent = asyncHandle(async (req, res) => {
     const { idEvent, ...updateFields } = req.body
     let Address = '';
-    if (updateFields.addressDetails) {
-        Address = [
-            updateFields.addressDetails.houseNumberAndStreet,
-            updateFields.addressDetails.ward?.name,
-            updateFields.addressDetails.districts?.name,
-            updateFields.addressDetails.province?.name
-        ].filter(Boolean).join(', ')
-    }
-    if(updateFields.keywords && updateFields.keywords.length > 0){
-        updateFields.keywords = await Promise.all(
-            updateFields.keywords.map(async (item) => {
-                if (item.isNew) {
-                    const keywordCreate = new KeyWordModel({ name: item.value });
-                    const savedKeyword = await keywordCreate.save({ session });
-                    return savedKeyword._id;
-                } else {
-                    return item.value; 
-                }
-            })
-        );
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        if (updateFields.addressDetails) {
+            Address = [
+                updateFields.addressDetails.houseNumberAndStreet,
+                updateFields.addressDetails.ward?.name,
+                updateFields.addressDetails.districts?.name,
+                updateFields.addressDetails.province?.name
+            ].filter(Boolean).join(', ')
+        }
+        if (updateFields.keywords && updateFields.keywords.length > 0) {
+            updateFields.keywords = await Promise.all(
+                updateFields.keywords.map(async (item) => {
+                    try {
+                        if (item.isNew) {
+                            const keywordCreate = new KeyWordModel({ name: item.value });
+                            const savedKeyword = await keywordCreate.save({ session });
+                            return savedKeyword._id;
+                        } else {
+                            return item.value;
+                        }
+                    } catch (error) {
+                        console.error('Error saving keyword:', error);
+                        return null;
+                    }
+                })
+            );
+        }
+        const updateData = {
+            ...updateFields,
+            titleNonAccent: cleanString(updateFields?.title), // Tạo thêm trường mới
+            Address: Address
+        };
+        const eventUpdate = await EventModel.findByIdAndUpdate(idEvent, updateData, { new: true })
+        if (!eventUpdate) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Không tìm thấy sự kiện'
+            });
+        }
 
-    }
-    const updateData = {
-        ...updateFields,
-        titleNonAccent: cleanString(updateFields?.title), // Tạo thêm trường mới
-        Address: Address
-    };
-    console.log("updateData",updateData)
-    const eventUpdate = await EventModel.findByIdAndUpdate(idEvent, updateData, { new: true })
-    if (!eventUpdate) {
-        return res.status(404).json({
+        await session.commitTransaction();
+        session.endSession();
+        res.status(200).json({
+            status: 200,
+            message: 'Thành công',
+            data: eventUpdate
+        })
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        res.status(404).json({
             status: 404,
-            message: 'Không tìm thấy sự kiện'
-        });
+            message: `Lỗi rồi ${error}`,
+        })
     }
-    res.status(200).json({
-        status: 200,
-        message: 'Thành công',
-        data: eventUpdate
-    })
 })
 
 const buyTicket = asyncHandle(async (req, res) => {
@@ -334,7 +351,7 @@ const updateStatusEvent = asyncHandle(async (req, res) => {
 const createEvent = asyncHandle(async (req, res) => {
     const { showTimes, event, idUser } = req.body
     delete event._id
-    if(!showTimes  || showTimes.length === 0  || !event || !idUser){
+    if (!showTimes || showTimes.length === 0 || !event || !idUser) {
         return res.status(404).json({
             status: 404,
             message: 'Hãy nhập đầy đủ thông tin',
@@ -445,7 +462,7 @@ const createEvent = asyncHandle(async (req, res) => {
                 event.addressDetails.province?.name
             ].filter(Boolean).join(', ');
         }
-        if(event.keywords && event.keywords.length > 0){
+        if (event.keywords && event.keywords.length > 0) {
             event.keywords = await Promise.all(
                 event.keywords.map(async (item) => {
                     if (item.isNew) {
@@ -453,7 +470,7 @@ const createEvent = asyncHandle(async (req, res) => {
                         const savedKeyword = await keywordCreate.save({ session });
                         return savedKeyword._id;
                     } else {
-                        return item.value; 
+                        return item.value;
                     }
                 })
             );
@@ -486,12 +503,12 @@ const createEvent = asyncHandle(async (req, res) => {
                     }
                 }
             }).select('user').populate('user', 'fcmTokens');
-            
+
             const usersFollowing = follow.flatMap(item => item.user._id);
             const fcmTokens = follow.flatMap(item => item.user.fcmTokens);
             const uniqueFcmTokens = [...new Set(fcmTokens)];
             if (uniqueFcmTokens.length > 0) {
-                await Promise.all(uniqueFcmTokens.map(async (fcmToken) =>{
+                await Promise.all(uniqueFcmTokens.map(async (fcmToken) => {
                     try {
                         await notificationController.handleSendNotification({
                             fcmToken: fcmToken,
@@ -508,7 +525,7 @@ const createEvent = asyncHandle(async (req, res) => {
                         console.error(`Error sending notification to ${fcmToken}:`, error);
                     }
                 }
-                  
+
                 )
                 )
             }
@@ -517,11 +534,11 @@ const createEvent = asyncHandle(async (req, res) => {
                     const notification = new NotificationModel({
                         senderID: idUser,
                         recipientId: user._id,
-                        eventId:savedEvent._id,
+                        eventId: savedEvent._id,
                         type: 'newEvent',
                         content: ` đã tổ chức sự kiện "${savedEvent.title}" hãy xem ngay nào !!!`,
                     })
-                    await notification.save({session})
+                    await notification.save({ session })
                 }))
             }
             await session.commitTransaction(); // Commit transaction nếu tất cả đều thành công
@@ -561,8 +578,8 @@ const incViewEvent = asyncHandle(async (req, res) => {
                 options: { sort: { price: -1 } }, // Sắp xếp the
                 populate: {
                     path: 'promotion',
-                    select:'-startDate -endDate -createdAt -updatedAt',
-                    options: { limit: 1 } 
+                    select: '-startDate -endDate -createdAt -updatedAt',
+                    options: { limit: 1 }
                 }
             },
         }).select('-description -authorId')
@@ -593,23 +610,23 @@ const incViewEvent = asyncHandle(async (req, res) => {
         const recordIndex = uniqueViewRecord.findIndex((record) => record.user.toString() === idUser);
         if (recordIndex === -1) {
             // Người dùng chưa tồn tại hoặc đã qua 24 giờ kể từ lần ghi nhận trước
-            // if (recordIndex !== -1) {
-            //     // Cập nhật thời gian nếu đã qua 24 giờ
-            //     uniqueViewRecord[recordIndex].createdAt = currentTime;
-            // } else {
-            //     // Thêm bản ghi mới nếu chưa tồn tại
-            //     uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
-            // }
-            // uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-            // event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            if (recordIndex !== -1) {
+                // Cập nhật thời gian nếu đã qua 24 giờ
+                uniqueViewRecord[recordIndex].createdAt = currentTime;
+            } else {
+                // Thêm bản ghi mới nếu chưa tồn tại
+                uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
+            }
+            uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+            event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
         } else {
-            // if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
-            //     uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-            //     event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
-            // }
+            if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
+                uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+                event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            }
         }
-        // const viewRecord = [...event.viewRecord]
-        // viewRecord.unshift({ user: idUser, createdAt: currentTime });
+        const viewRecord = [...event.viewRecord]
+        viewRecord.unshift({ user: idUser, createdAt: currentTime });
 
         event.showTimes = [
             ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
@@ -677,7 +694,7 @@ const getShowTimesEvent = asyncHandle(async (req, res) => {
             options: { sort: { price: -1 } }, // Sắp xếp theo startDate tăng dần
             populate: {
                 path: 'promotion',
-                select:'-startDate -endDate -createdAt -updatedAt',
+                select: '-startDate -endDate -createdAt -updatedAt',
             }
         }
     })
@@ -709,7 +726,7 @@ const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
     const event = await EventModel.findById(idEvent).select('showTimes').populate({
         path: 'showTimes',
         options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần,
-        select:'-typeTickets'
+        select: '-typeTickets'
     })
     const showTimeCopySort = [
         ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
@@ -731,7 +748,7 @@ const getShowTimesEventForOrganizer = asyncHandle(async (req, res) => {
 const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
     const { idEvent } = req.query
     const event = await EventModel.findById(idEvent)
-    .populate('keywords', '_id name popularity')
+        .populate('keywords', '_id name popularity')
 
         // .populate({
         //     path:'showTimes',
@@ -753,14 +770,13 @@ const getEventByIdForOrganizer = asyncHandle(async (req, res) => {
     // event.showTimes = showTimeCopySort;
     const cloneEvent = {
         ...event.toObject(),
-        keywords:[
+        keywords: [
             ...event.keywords.map(({ _id, name }) => ({
                 value: _id,
                 label: name,
             }))
         ]
     }
-    console.log("cloneEvent",cloneEvent)
     res.status(200).json({
         status: 200,
         message: 'Thành công',
