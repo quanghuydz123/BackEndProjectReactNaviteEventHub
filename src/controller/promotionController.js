@@ -93,6 +93,16 @@ const createPromotion = asyncHandle(async (req, res) => {
           message: `loại vé ${typeTicket?.name} miễn phí rồi còn áp dụng mã giảm giá làm gì `,
         })
       }
+      if(discountType === 'FixedAmount'){
+        if(typeTicket?.price < discountValue){
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(404).json({
+            status: 404,
+            message: `loại vé ${typeTicket?.name} có giá thấp hơn so với mức giảm vui lòng thử lại `,
+          })
+        }
+      }
       if(typeTicket?.promotion?.status === 'Ongoing' || typeTicket?.promotion?.status === 'NotStarted'){
         await session.abortTransaction();
         session.endSession();
@@ -172,13 +182,23 @@ const updatePromotion = asyncHandle(async (req, res) => {
       }
       for(const idTypeTicket of addedTypeTickets){
         const typeTicket = await TypeTicketModel.findById(idTypeTicket).populate('promotion', '_id status').session(session)
-        if(typeTicket.type === 'Free'){
+        if(typeTicket?.type === 'Free'){
           await session.abortTransaction();
           session.endSession();
           return res.status(404).json({
             status: 404,
             message: `loại vé ${typeTicket?.name} miễn phí rồi còn áp dụng mã giảm giá làm gì `,
           })
+        }
+        if(discountType === 'FixedAmount'){
+          if(typeTicket?.price < discountValue){
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({
+              status: 404,
+              message: `loại vé ${typeTicket?.name} có giá thấp hơn so với mức giảm vui lòng thử lại `,
+            })
+          }
         }
         if((typeTicket?.promotion?.status === 'Ongoing' || typeTicket?.promotion?.status === 'NotStarted') && typeTicket?.promotion?._id !== promotion._id){
           await session.abortTransaction();
@@ -249,6 +269,16 @@ const cancelPromotion = asyncHandle(async (req, res) => {
             status: 404,
             message: `loại vé ${typeTicket?.name} miễn phí rồi còn áp dụng mã giảm giá làm gì? `,
           })
+        }
+        if(promotion?.discountType === 'FixedAmount'){
+          if(typeTicket?.price < promotion?.discountValue){
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({
+              status: 404,
+              message: `loại vé ${typeTicket?.name} có giá thấp hơn so với mức giảm vui lòng thử lại `,
+            })
+          }
         }
         if((typeTicket?.promotion?.status === 'Ongoing' || typeTicket?.promotion?.status === 'NotStarted') && typeTicket?.promotion?._id !== promotion._id){
           await session.abortTransaction();
