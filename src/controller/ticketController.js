@@ -50,8 +50,8 @@ const reserveTicket = asyncHandle(async (req, res) => {
       await typeTicketData.save({ session });
 
       const hasValidPromotion =
-      typeTicketData?.promotion?.[0]?.status === "Ongoing" ||
-      typeTicketData?.promotion?.[0]?.status === "NotStarted";
+      typeTicketData?.promotion?.status === "Ongoing" ||
+      typeTicketData?.promotion?.status === "NotStarted";
 
       const ticketsToCreate = Array.from({ length: amount }, () => ({
         price: typeTicketData.type === "Paid" ? typeTicketData.price : 0,
@@ -62,9 +62,9 @@ const reserveTicket = asyncHandle(async (req, res) => {
         current_owner: idUser,
         status: "Reserved",
         ...(hasValidPromotion && {
-          promotion: typeTicketData.promotion[0]._id,
-          discountType: typeTicketData.promotion[0].discountType,
-          discountValue: typeTicketData.promotion[0].discountValue,
+          promotion: typeTicketData.promotion._id,
+          discountType: typeTicketData.promotion.discountType,
+          discountValue: typeTicketData.promotion.discountValue,
         }),
       }));
 
@@ -568,7 +568,7 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
         {
           ...totalTicketSoldAndtotalRevenue[0],
           totalAmount: totalAmount + (totalTicketSoldAndtotalRevenue[0]?.totalTicketsSold ? totalTicketSoldAndtotalRevenue[0]?.totalTicketsSold : 0),
-          totalRevenue: totalRevenue,
+          totalRevenue: totalRevenue + totalTicketSoldAndtotalRevenue[0].totalRevenueSold ,
         },
 
         typeTicketSoldAndtotalRevenue
