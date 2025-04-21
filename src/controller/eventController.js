@@ -592,24 +592,24 @@ const incViewEvent = asyncHandle(async (req, res) => {
         const currentTime = Date.now();
         const recordIndex = uniqueViewRecord.findIndex((record) => record.user.toString() === idUser);
         if (recordIndex === -1) {
-            // Người dùng chưa tồn tại hoặc đã qua 24 giờ kể từ lần ghi nhận trước
-            // if (recordIndex !== -1) {
-            //     // Cập nhật thời gian nếu đã qua 24 giờ
-            //     uniqueViewRecord[recordIndex].createdAt = currentTime;
-            // } else {
-            //     // Thêm bản ghi mới nếu chưa tồn tại
-            //     uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
-            // }
-            // uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-            // event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+           // Người dùng chưa tồn tại hoặc đã qua 24 giờ kể từ lần ghi nhận trước
+            if (recordIndex !== -1) {
+                // Cập nhật thời gian nếu đã qua 24 giờ
+                uniqueViewRecord[recordIndex].createdAt = currentTime;
+            } else {
+                // Thêm bản ghi mới nếu chưa tồn tại
+                uniqueViewRecord.push({ user: idUser, createdAt: currentTime });
+            }
+            uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+            event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
         } else {
-            // if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
-            //     uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
-            //     event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
-            // }
+            if (currentTime - new Date(uniqueViewRecord[recordIndex].createdAt).getTime() > 24 * 60 * 60 * 1000) {
+                uniqueViewRecord.unshift({ user: idUser, createdAt: currentTime });
+                event.uniqueViewCount = (event.uniqueViewCount || 0) + 1;
+            }
         }
-        // const viewRecord = [...event.viewRecord]
-        // viewRecord.unshift({ user: idUser, createdAt: currentTime });
+        const viewRecord = [...event.viewRecord]
+        viewRecord.unshift({ user: idUser, createdAt: currentTime });
 
         event.showTimes = [
             ...event.showTimes.filter(showTime => showTime.status !== 'Ended'),
