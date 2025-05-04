@@ -418,6 +418,9 @@ const deleteShowTime = asyncHandle(async (req, res) => {
         idShowTime,
         { session }
       );
+      event.showTimes = event.showTimes.filter(
+        (showTimeId) => showTimeId.toString() !== idShowTime
+      );
       if (showTimeDeleted && showTimeDeleted.typeTickets) {
         await TypeTicketModel.deleteMany(
           { _id: { $in: showTimeDeleted.typeTickets } },
@@ -462,7 +465,7 @@ const deleteShowTime = asyncHandle(async (req, res) => {
     } else if (allCancel) {
       event.statusEvent = 'Canceled';
     }
-    event.showTimes = showTimes;
+
     await event.save({ session });
     await session.commitTransaction();
     session.endSession();
