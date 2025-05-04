@@ -397,7 +397,14 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
     });
   }
   const showTime = await ShowTimeModel.findById(idShowTime)
-    .populate('typeTickets', 'amount price isCheckIn')
+    .populate({
+      path: 'typeTickets',
+      select: 'amount price promotion',
+      populate: {
+        path: 'promotion',
+        select: 'discountType discountValue status',
+      },
+    })
     .select('typeTickets');
   if (!showTime) {
     return res.status(404).json({
@@ -409,11 +416,26 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
     (sum, ticket) => sum + ticket.amount,
     0
   );
+  const renderPrice = (ticket) => {
+    if (ticket?.promotion) {
+      const promotion = ticket.promotion;
+      if (promotion.status === 'Ongoing') {
+        if (promotion.discountType === 'Percentage') {
+          return (ticket.price * (100 - promotion.discountValue)) / 100;
+        } else {
+          if (ticket.price - promotion.discountValue < 0) {
+            return 0;
+          }
+          return ticket.price - promotion.discountValue;
+        }
+      }
+    }
+    return ticket.price;
+  };
   const totalRevenue = showTime.typeTickets.reduce(
-    (sum, ticket) => sum + ticket.price * ticket.amount,
+    (sum, ticket) => sum + renderPrice(ticket) * ticket.amount,
     0
   );
-  // const totalCheckin = showTime.typeTickets.reduce((sum, ticket) => sum + ticket.isCheckIn ? 1 : 0, 0);
 
   try {
     let id = new mongoose.Types.ObjectId(idShowTime);
@@ -422,13 +444,37 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
         $match: { showTime: id, status: { $ne: 'Reserved' } },
       },
       {
+        $addFields: {
+          finalPrice: {
+            $cond: [
+              { $eq: ['$discountType', 'FixedAmount'] },
+              { $subtract: ['$price', '$discountValue'] },
+              {
+                $cond: [
+                  { $eq: ['$discountType', 'Percentage'] },
+                  {
+                    $subtract: [
+                      '$price',
+                      {
+                        $multiply: [
+                          '$price',
+                          { $divide: ['$discountValue', 100] },
+                        ],
+                      },
+                    ],
+                  },
+                  '$price',
+                ],
+              },
+            ],
+          },
+        },
+      },
+      {
         $group: {
           _id: null,
-          //   tickets: {
-          //     $push:"$$ROOT"
-          //  },
-          totalTicketsSold: { $sum: 1 }, // Đếm số lượng vé
-          totalRevenueSold: { $sum: '$price' }, // Tổng doanh thu từ trường `price`
+          totalTicketsSold: { $sum: 1 },
+          totalRevenueSold: { $sum: '$finalPrice' },
           totalTicketsCheckedIn: {
             $sum: {
               $cond: [{ $eq: ['$isCheckIn', true] }, 1, 0],
@@ -529,6 +575,24 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
                 name: 1,
                 amount: 1,
                 price: 1,
+                promotion: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'promotions',
+          localField: 'ticketDetails.promotion',
+          foreignField: '_id',
+          as: 'promotionDetails',
+          pipeline: [
+            {
+              $project: {
+                discountType: 1,
+                discountValue: 1,
+                status: 1,
               },
             },
           ],
@@ -541,6 +605,7 @@ const getSalesSumaryByIdShowTime = asyncHandle(async (req, res) => {
           totalCheckIn: 1,
           priceSold: { $arrayElemAt: ['$priceSold', 0] },
           typeTicket: { $arrayElemAt: ['$ticketDetails', 0] },
+          promotion: { $arrayElemAt: ['$promotionDetails', 0] },
         },
       },
     ]);
