@@ -807,6 +807,109 @@ const getByIdShowTime = asyncHandle(async (req, res) => {
     },
   });
 });
+
+const getSalesCharts = asyncHandle(async (req, res) => {
+  const { idShowTime } = req.query;
+
+  if (!mongoose.Types.ObjectId.isValid(idShowTime)) {
+    return res.status(400).json({
+      status: 400,
+      message: 'idShowTime không hợp lệ',
+    });
+  }
+
+  try {
+    const showTimeId = new mongoose.Types.ObjectId(idShowTime);
+
+    const result = await TicketModel.aggregate([
+      // 1. Lọc theo showTime và status
+      {
+        $match: {
+          showTime: showTimeId,
+          status: { $ne: 'Reserved' },
+        },
+      },
+
+      // 2. Tính giá sau giảm
+      {
+        $addFields: {
+          discountedPrice: {
+            $cond: [
+              { $eq: ['$discountType', 'FixedAmount'] },
+              { $subtract: ['$price', '$discountValue'] },
+              {
+                $cond: [
+                  { $eq: ['$discountType', 'Percentage'] },
+                  {
+                    $subtract: [
+                      '$price',
+                      {
+                        $multiply: [
+                          '$price',
+                          { $divide: ['$discountValue', 100] },
+                        ],
+                      },
+                    ],
+                  },
+                  '$price',
+                ],
+              },
+            ],
+          },
+        },
+      },
+
+      // 3. Tạo field tháng từ createdAt
+      {
+        $addFields: {
+          month: {
+            $dateToString: { format: '%m-%Y', date: '$createdAt' },
+          },
+        },
+      },
+
+      // 4. Nhóm theo tháng
+      {
+        $group: {
+          _id: '$month',
+          revenue: { $sum: '$discountedPrice' },
+          ticketSold: { $sum: 1 },
+        },
+      },
+
+      // 5. Định dạng kết quả
+      {
+        $project: {
+          _id: 0,
+          month: '$_id',
+          revenue: 1,
+          ticketSold: 1,
+        },
+      },
+
+      // 6. Sắp xếp tăng dần theo tháng
+      {
+        $sort: {
+          month: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: 200,
+      message: 'Thành công',
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: 'Lỗi server',
+      error: error.message,
+    });
+  }
+});
+
 module.exports = {
   getAll,
   reserveTicket,
@@ -815,4 +918,5 @@ module.exports = {
   getSalesSumaryByIdShowTime,
   statisticalCheckinByIdShowTime,
   getByIdShowTime,
+  getSalesCharts,
 };
