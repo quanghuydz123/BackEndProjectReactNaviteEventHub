@@ -62,9 +62,9 @@ const reserveTicket = asyncHandle(async (req, res) => {
         current_owner: idUser,
         status: 'Reserved',
         ...(hasValidPromotion && {
-          promotion: typeTicketData.promotion._id,
-          discountType: typeTicketData.promotion.discountType,
-          discountValue: typeTicketData.promotion.discountValue,
+          promotion: typeTicketData?.promotion._id,
+          discountType: typeTicketData?.promotion?.discountType,
+          discountValue: typeTicketData?.promotion?.discountValue,
         }),
       }));
 
