@@ -222,7 +222,12 @@ const CancelInvoice = asyncHandle(async (req, res) => {
 });
 
 const getByIdUser = asyncHandle(async (req, res) => {
-  const { idUser, searchValue, filterMonthTime = 'all' } = req.query;
+  const {
+    idUser,
+    searchValue,
+    filterMonthTime = 'all',
+    filterYearTime,
+  } = req.query;
   const regex = new RegExp(
     removeVietnameseTones(searchValue ?? '').replace(/\s+/g, ' '),
     'i'
@@ -243,7 +248,7 @@ const getByIdUser = asyncHandle(async (req, res) => {
       user: idUser,
       $expr: {
         $and: [
-          { $eq: [{ $year: '$createdAt' }, 2024] },
+          { $eq: [{ $year: '$createdAt' }, filterYearTime] },
           { $eq: [{ $month: '$createdAt' }, Number(filterMonthTime)] },
         ],
       },
