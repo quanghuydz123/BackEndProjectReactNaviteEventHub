@@ -262,6 +262,7 @@ const updateTypeTicket = asyncHandle(async (req, res) => {
     typeTicket.type = type;
     typeTicket.startSaleTime = startSaleTime;
     typeTicket.endSaleTime = endSaleTime;
+    typeTicket.amount = amount;
     const data = await typeTicket.save({ session });
     const tickets = await TypeTicketModel.find({
       _id: { $in: showTime.typeTickets },
