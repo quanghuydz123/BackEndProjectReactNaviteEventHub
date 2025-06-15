@@ -131,6 +131,12 @@ const getEvents = asyncHandle(async (req, res) => {
   if (keywordsFilter) {
     filter.keywords = { $in: keywordsFilter };
   }
+  const matchShowTime = {}
+  if(startAt && endAt){
+    matchShowTime.startDate = { $gte: new Date(startAt) },
+    matchShowTime.endDate = { $lte: new Date(endAt) }
+  }
+  console.log(matchShowTime)
   const events = await EventModel.find(filter)
     .populate({
       path: 'keywords',
@@ -140,7 +146,8 @@ const getEvents = asyncHandle(async (req, res) => {
     .populate('usersInterested.user', '_id fullname email photoUrl')
     .populate({
       path: 'showTimes',
-      options: { sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
+      match: matchShowTime,
+      options: {sort: { startDate: 1 } }, // Sắp xếp theo startDate tăng dần
       populate: {
         path: 'typeTickets',
         select: 'price type',
@@ -164,7 +171,8 @@ const getEvents = asyncHandle(async (req, res) => {
   // events.forEach(event => {
   //     event.showTimes = [...event.showTimes].sort((a, b) => (a.status === 'Ended') - (b.status === 'Ended'));
   // });
-  events.forEach((event) => {
+  const filteredEvents = events.filter(event => event.showTimes.length > 0);
+  filteredEvents.forEach((event) => {
     //sap xếp các suất diễn đã kết thúc xuống cuối
     event.showTimes = [
       ...event.showTimes.filter((showTime) => showTime.status !== 'Ended'),
@@ -174,11 +182,11 @@ const getEvents = asyncHandle(async (req, res) => {
   let sortedEvents;
   if (sortType) {
     //bỏ các sự kiện đã kết thúc xuống cuối
-    sortedEvents = events.sort(
+    sortedEvents = filteredEvents.sort(
       (a, b) => (a.statusEvent === 'Ended') - (b.statusEvent === 'Ended')
     );
   } else {
-    const sortedStartEvents = events.sort((a, b) => {
+    const sortedStartEvents = filteredEvents.sort((a, b) => {
       //sắp xếp sự kiện tăng dần theo thời gian xuất diễn
       const dateA = a.showTimes[0]?.startDate
         ? new Date(a.showTimes[0].startDate)

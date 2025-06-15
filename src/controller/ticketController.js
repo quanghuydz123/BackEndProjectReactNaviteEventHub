@@ -2,10 +2,12 @@ const asyncHandle = require('express-async-handler');
 const InVoiceModel = require('../models/InVoiceModel');
 const TicketModel = require('../models/TicketModel');
 const TypeTicketModel = require('../models/TypeTicketModel');
+const NotificationModel = require('../models/NotificationModel');
 
 const { mongoose } = require('mongoose');
 const generateUniqueID = require('../utils/generateUniqueID');
 const ShowTimeModel = require('../models/ShowTimeModel');
+const UserModel = require('../models/UserModel');
 
 const getAll = asyncHandle(async (req, res) => {
   res.status(200).json({
@@ -254,11 +256,15 @@ const getByIdUser = asyncHandle(async (req, res) => {
 });
 
 const getByIdInvoice = asyncHandle(async (req, res) => {
-  const { idInvoice } = req.query;
-  let id = new mongoose.Types.ObjectId(idInvoice);
+  const { idInvoice, idOwner} = req.query;
+  const match = {
+  invoice: new mongoose.Types.ObjectId(idInvoice),
+  status: { $ne: 'Reserved' },
+  ...(idOwner && { current_owner: new mongoose.Types.ObjectId(idOwner) })
+};
   const data = await TicketModel.aggregate([
     {
-      $match: { invoice: id, status: { $ne: 'Reserved' } },
+      $match: match,
     },
     {
       $lookup: {
@@ -910,6 +916,63 @@ const getSalesCharts = asyncHandle(async (req, res) => {
   }
 });
 
+const shareTicket = asyncHandle(async (req, res) => {
+  const {idTicket,idUser} = req.body
+  
+  const ticket = await TicketModel.findById(idTicket).populate('event', 'title');
+  if (!ticket) {
+    res.status(404).json({
+      status: 404,
+      message: 'Ticket không tồn tại không hệ thống',
+    });
+  }
+  const user = await UserModel.findById(idUser)
+ if (!user) {
+    res.status(404).json({
+      status: 404,
+      message: 'User không tồn tại không hệ thống',
+    });
+  }
+  
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+  if(ticket.status === 'Sold'){
+    const idOwner = ticket.current_owner
+    // const notification = new NotificationModel({
+    //   senderID: idOwner,
+    //   recipientId: idUser,
+    //   invoiceId:ticket.invoice,
+    //   type: 'shareTicket',
+    //   content: `Đã tặng bạn vé tham gia sự kiện ${ticket.event.title} nhấn vào để xem chi tiết !!`,
+    // });
+    // await notification.save({ session });
+    ticket.current_owner = idUser
+    await ticket.save({session})
+    await session.commitTransaction();
+    session.endSession();
+    res.status(200).json({
+      status: 200,
+      message: 'share vé thành công',
+      data: ticket,
+    });
+  }else{
+     res.status(404).json({
+      status: 404,
+      message: `Vé sự kiện đã kết thúc hoặc đã bị hủy`,
+    });
+  }
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(404).json({
+      status: 404,
+      message: `Lỗi rồi ${error}`,
+    });
+  }
+ 
+});
+
 module.exports = {
   getAll,
   reserveTicket,
@@ -919,4 +982,5 @@ module.exports = {
   statisticalCheckinByIdShowTime,
   getByIdShowTime,
   getSalesCharts,
+  shareTicket
 };

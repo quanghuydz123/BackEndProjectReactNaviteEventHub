@@ -13,5 +13,6 @@ ticketRouter.get(
 // ticketRouter.get('/statistical-checkinByIdShowTime',ticketController.statisticalCheckinByIdShowTime)
 ticketRouter.get('/get-byIdShowTime', ticketController.getByIdShowTime);
 ticketRouter.get('/get-sales-charts', ticketController.getSalesCharts);
+ticketRouter.get('/share-ticket', ticketController.shareTicket);
 
 module.exports = ticketRouter;
